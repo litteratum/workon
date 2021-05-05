@@ -1,0 +1,59 @@
+# GIT workon
+
+Do you often need to clone some project, solve one task and remove it from your filesystem?
+
+Do you often afraid that you might leave something unpushed or stashed?
+
+Do you like to leave a perfectly clean desk after your work is done?
+
+Then this script is for you.
+
+## Usage
+
+### CLI
+
+#### Start to work on a project
+
+When you need to clone a repository, use the `start` command:
+
+```bash
+workon start <my_project>
+```
+
+It will clone "my_project" from the GIT source and save it to the working directory. Please refer to the
+[Configuration section](#configuration) to know how to configure the script.
+
+It is encouraged that your desk is clean when you start with a new work, so the command will fail if you have
+something unfinished. But sometimes it is really needed, so there is `-f/--force` flag to proceed.
+
+See `workon start --help` for other available options on how to control the command.
+
+#### Finish your work with a project
+
+When you are done with your work, use `done` command:
+
+```bash
+workon done [<my_project>]
+```
+
+It will check if you did not forget to push your changes or leaved any stashes and then remove a project folder
+under a working directory. If there is something left, the command will fail. But as with `start` command, you
+always can use `-f/--force` flag if you are confident.
+
+If the command ran without arguments, it will remove ALL projects from a working directory.
+
+See `workon done --help` for other available options on how to control the command.
+
+### Configuration
+
+The script's commands can be fully controlled by CLI arguments, but a couple of environment variables are supported for
+convenience:
+
+* `WORKON_GIT_SOURCE` - the repository will be cloned from this source. Examples: "https://github.com/<my_username>",
+  "git@github.com:<my_username>". May be overridden with `-s/--source` argument
+* `WORKON_DIR` - the directory to which repositories will be cloned. May be overridden with `-d/--directory` argument
+
+It is expected, that you will set both those variables once and then will only override them with CLI arguments when
+needed.
+
+The script will fail if both CLI argument not specified and environment variables are not set.

@@ -1,0 +1,175 @@
+"""Tests for script.py."""
+from unittest.mock import patch, Mock
+import os
+import tempfile
+from argparse import Namespace
+
+import pytest
+from workon import script
+from workon.errors import ScriptError
+
+
+def test_done_no_such_project():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        args = Namespace(project='dummy', directory=tmp_dir_path)
+
+        with pytest.raises(ScriptError):
+            script.done(args)
+
+
+@pytest.mark.parametrize('specific', [(True, False)])
+def test_done_nonexistent_dir(specific):
+    if specific:
+        project = 'dummy'
+    else:
+        project = None
+
+    args = Namespace(project=project, directory='ehehe')
+
+    with pytest.raises(ScriptError):
+        script.done(args)
+
+
+def test_done_project_found_and_removed():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=False
+        )
+        script.done(args)
+        assert not os.path.exists(proj_path)
+
+
+@patch('workon.script.git.is_stash_empty', Mock(return_value=False))
+def test_done_project_found_git_stashed_error_raised():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=False
+        )
+        with pytest.raises(ScriptError):
+            script.done(args)
+        assert os.path.exists(proj_path)
+
+
+@patch('workon.script.git.is_stash_empty', Mock(return_value=False))
+def test_done_project_found_git_stashed_forced_ok():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=True
+        )
+        script.done(args)
+        assert not os.path.exists(proj_path)
+
+
+@patch(
+    'workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
+)
+def test_done_project_found_git_unpushed_error_raised():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=False
+        )
+        with pytest.raises(ScriptError) as exc:
+            script.done(args)
+        assert 'oops' in str(exc.value)
+        assert os.path.exists(proj_path)
+
+
+@patch(
+    'workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
+)
+def test_done_project_found_git_unpushed_forced_ok():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=True
+        )
+        script.done(args)
+        assert not os.path.exists(proj_path)
+
+
+def test_done_all_projects_removed():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(directory=tmp_dir_path, project=None, force=False)
+        script.done(args)
+
+        assert len(os.listdir(tmp_dir_path)) == 0
+
+
+def test_start_working_directory_is_not_empty_error_raised():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=False
+        )
+
+        with pytest.raises(ScriptError) as exc:
+            script.start(args)
+        assert 'not empty' in str(exc.value)
+
+
+@patch('workon.script.git.clone')
+def test_start_working_directory_is_not_empty_forced(mc_clone):
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tempfile.mkdtemp(dir=tmp_dir_path)
+        proj_path = os.path.join(tmp_dir_path, 'some')
+
+        mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
+
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=True, source='some'
+        )
+        script.start(args)
+        assert os.path.isdir(proj_path)
+
+
+@patch('workon.script.git.clone')
+def test_start_no_such_project(mc_clone):
+    mc_clone.side_effect = ScriptError
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=False, source='some'
+        )
+
+        with pytest.raises(ScriptError):
+            script.start(args)
+
+
+@pytest.mark.parametrize('source,expected_source', [
+    ('https://github.com/user', 'https://github.com/user/some.git'),
+    ('https://github.com/user/', 'https://github.com/user/some.git'),
+    ('https://github.com/user//', 'https://github.com/user/some.git'),
+    ('git@github.com:user', 'git@github.com:user/some.git'),
+    ('git@github.com:user/', 'git@github.com:user/some.git'),
+    ('git@github.com:user//', 'git@github.com:user/some.git'),
+])
+@patch('workon.script.git.clone')
+def test_start_cloned(mc_clone, source, expected_source):
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = os.path.join(tmp_dir_path, 'some')
+        mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=False,
+            source=source
+        )
+        script.start(args)
+        assert os.path.isdir(proj_path)
+
+        mc_clone.assert_called_once_with(expected_source, proj_path)
