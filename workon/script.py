@@ -35,7 +35,7 @@ def done(args):
         projects = os.listdir(args.directory)
     except OSError as exc:
         raise ScriptError(
-            'Oops, can\'t access specified directory: %s' % exc) from exc
+            'Oops, can\'t access working directory: %s' % exc) from exc
 
     if args.project:
         if args.project not in projects:
@@ -51,7 +51,7 @@ def start(args):
     """Start your work on a project.
 
     * clones the project from GIT
-    * checks is working directory is empty
+    * checks if working directory is empty
     """
     logging.info('Setting up "%s"', args.project)
 
