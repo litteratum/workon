@@ -1,4 +1,5 @@
 """Script main module."""
+import glob
 import logging
 import os
 import shutil
@@ -53,7 +54,11 @@ def done(args):
         _remove_project(args.project, args.directory, args.force)
     else:
         for project in projects:
-            _remove_project(project, args.directory, args.force)
+            if os.path.isdir(os.path.join(args.directory, project)):
+                _remove_project(project, args.directory, args.force)
+        # there may be some files left
+        for filepath in glob.glob(os.path.join(args.directory, '*')):
+            os.remove(filepath)
 
 
 def start(args):

@@ -143,6 +143,17 @@ def test_done_all_projects_removed():
 
         assert len(os.listdir(tmp_dir_path)) == 0
 
+def test_done_all_projects_removed_all_files_removed():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkstemp(dir=tmp_dir_path)
+
+        args = Namespace(directory=tmp_dir_path, project=None, force=False)
+        script.done(args)
+
+        assert len(os.listdir(tmp_dir_path)) == 0
+
 
 def test_start_working_directory_is_not_empty_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
