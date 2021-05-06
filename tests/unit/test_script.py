@@ -1,8 +1,9 @@
 """Tests for script.py."""
-from unittest.mock import patch, Mock
 import os
+import subprocess
 import tempfile
 from argparse import Namespace
+from unittest.mock import Mock, patch
 
 import pytest
 from workon import script
@@ -116,7 +117,7 @@ def test_start_working_directory_is_not_empty_error_raised():
         tempfile.mkdtemp(dir=tmp_dir_path)
 
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=False
+            project='some', directory=tmp_dir_path, force=False, noopen=True
         )
 
         with pytest.raises(ScriptError) as exc:
@@ -133,7 +134,8 @@ def test_start_working_directory_is_not_empty_forced(mc_clone):
         mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
 
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=True, source='some'
+            project='some', directory=tmp_dir_path, force=True, source='some',
+            noopen=True
         )
         script.start(args)
         assert os.path.isdir(proj_path)
@@ -145,7 +147,8 @@ def test_start_no_such_project(mc_clone):
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=False, source='some'
+            project='some', directory=tmp_dir_path, force=False, source='some',
+            noopen=True
         )
 
         with pytest.raises(ScriptError):
@@ -167,9 +170,71 @@ def test_start_cloned(mc_clone, source, expected_source):
         mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
         args = Namespace(
             project='some', directory=tmp_dir_path, force=False,
-            source=source
+            source=source, noopen=True
         )
         script.start(args)
         assert os.path.isdir(proj_path)
 
         mc_clone.assert_called_once_with(expected_source, proj_path)
+
+
+@patch('workon.script.git.clone', Mock())
+@patch('workon.script.subprocess')
+def test_start_opens_specified_editor(mc_subprocess):
+    mc_subprocess.run.return_value = Mock(returncode=0)
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=True, source='some',
+            noopen=False, editor='code'
+        )
+        script.start(args)
+        mc_subprocess.run.assert_called_once_with(
+            ['code', tmp_dir_path + '/some'], check=False
+        )
+
+
+@patch('workon.script.git.clone', Mock())
+@patch('workon.script.subprocess')
+def test_start_no_open(mc_subprocess):
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=True, source='some',
+            noopen=True
+        )
+        script.start(args)
+        assert mc_subprocess.run.call_count == 0
+
+
+@patch('workon.script.git.clone', Mock())
+@patch('workon.script.subprocess')
+def test_start_no_editor(mc_subprocess):
+    mc_subprocess.run.return_value = Mock(returncode=1)
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=True, source='some',
+            noopen=False, editor='code'
+        )
+
+        with pytest.raises(ScriptError) as exc:
+            script.start(args)
+        assert 'No suitable editor' in str(exc.value)
+
+        assert mc_subprocess.run.call_count == 4
+
+
+@patch('workon.script.git.clone', Mock())
+@patch('workon.script.subprocess')
+def test_start_editor_from_env(mc_subprocess):
+    os.environ['EDITOR'] = 'zzz'
+    mc_subprocess.run.side_effect = (Mock(returncode=1), Mock(returncode=0))
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        args = Namespace(
+            project='some', directory=tmp_dir_path, force=True, source='some',
+            noopen=False, editor='code'
+        )
+
+        script.start(args)
+        assert mc_subprocess.run.call_count == 2

@@ -7,40 +7,48 @@ from .errors import ScriptError
 
 def _append_start_command(subparsers, parent):
     start_command = subparsers.add_parser(
-        'start', help='Start your work on a project',
+        'start', help='start your work on a project',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=[parent], add_help=False,
     )
 
-    start_command.add_argument('project', help='Project name to start with')
+    start_command.add_argument('project', help='project name to start with')
     start_command.add_argument(
-        '-s', '--source', help='GIT source including username',
+        '-s', '--source', help='git source including username',
         default=os.environ.get('WORKON_GIT_SOURCE')
     )
     start_command.add_argument(
         '-f', '--force', help=(
-            'Force GIT clone even if your working directory'
+            'force GIT clone even if your working directory'
             ' is not empty'
         ), action='store_true'
+    )
+    start_command.add_argument(
+        '-e', '--editor', help='editor to use to open a project',
+        default=os.environ.get('WORKON_EDITOR')
+    )
+    start_command.add_argument(
+        '-n', '--no-open', dest='noopen',
+        help='don\'t open a project', action='store_true'
     )
 
 
 def _append_done_command(subparsers, parent):
     done_command = subparsers.add_parser(
-        'done', help='Finish your work and clean working directory',
+        'done', help='finish your work and clean working directory',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=[parent], add_help=False,
     )
 
     done_command.add_argument(
         'project', nargs='?', help=(
-            'Project name to finish work for. If not '
+            'project name to finish work for. If not '
             'specified, all projects will be finished'
         )
     )
     done_command.add_argument(
         '-f', '--force', help=(
-            'Force a project directory removal even if '
+            'force a project directory removal even if '
             'there are some unpushed changes or stashes'
         ), action='store_true'
     )
@@ -51,17 +59,17 @@ def _parse_args():
 
     subparsers = parser.add_subparsers(
         dest='command', title='script commands',
-        help='Command to execute', required=True
+        help='command to execute', required=True
     )
 
     parent_parser = argparse.ArgumentParser()
     parent_parser.add_argument(
-        '-d', '--directory', help='Working directory',
+        '-d', '--directory', help='working directory',
         default=os.environ.get('WORKON_DIR')
     )
     parent_parser.add_argument(
         '-v', '--verbose', action='count', default=0,
-        help='Get more information of what\'s going on'
+        help='get more information of what\'s going on'
     )
 
     _append_start_command(subparsers, parent=parent_parser)

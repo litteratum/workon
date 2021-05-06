@@ -31,10 +31,11 @@ def test_parse_args_start_command_no_args_env_variables_set():
     sys.argv = ['workon', 'start', 'my_project']
     os.environ['WORKON_GIT_SOURCE'] = 'some'
     os.environ['WORKON_DIR'] = '/tmp'
+    os.environ['WORKON_EDITOR'] = 'my_editor'
 
     assert cli.parse_args() == Namespace(
         command='start', directory='/tmp', force=False, source='some',
-        verbose=0, project='my_project'
+        verbose=0, project='my_project', noopen=False, editor='my_editor'
     )
 
 
@@ -43,10 +44,12 @@ def test_parse_args_cli_arg_overrides_env_variable():
         sys.argv = ['workon', 'start', 'my_project', '-d', tmp_dir_path, '-vv']
         os.environ['WORKON_GIT_SOURCE'] = 'some'
         os.environ['WORKON_DIR'] = '/tmp'
+        os.environ['WORKON_EDITOR'] = 'code'
 
         assert cli.parse_args() == Namespace(
             command='start', directory=tmp_dir_path, force=False,
-            source='some', verbose=2, project='my_project'
+            source='some', verbose=2, project='my_project', noopen=False,
+            editor='code'
         )
 
 

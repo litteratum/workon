@@ -2,6 +2,7 @@
 import logging
 import os
 import shutil
+import subprocess
 
 from . import git
 from .errors import ScriptError
@@ -64,3 +65,14 @@ def start(args):
     project_path = args.source.strip('/') + '/' + args.project + '.git'
     destination = args.directory + '/{}'.format(args.project)
     git.clone(project_path, destination)
+
+    if not args.noopen:
+        project_dir = os.path.join(args.directory, args.project)
+        for editor in (args.editor, os.environ.get('EDITOR'), 'vi', 'vim'):
+            if editor:
+                logging.info('Trying to open project with "%s"', editor)
+                result = subprocess.run([editor, project_dir], check=False)
+                if result.returncode == 0:
+                    break
+        else:
+            raise ScriptError('No suitable editor found to open your project')
