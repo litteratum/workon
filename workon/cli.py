@@ -49,7 +49,7 @@ def _append_done_command(subparsers, parent):
     done_command.add_argument(
         '-f', '--force', help=(
             'force a project directory removal even if '
-            'there are some unpushed changes or stashes'
+            'there are some unpushed/unstaged changes or stashes'
         ), action='store_true'
     )
 

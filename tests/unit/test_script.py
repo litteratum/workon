@@ -101,6 +101,38 @@ def test_done_project_found_git_unpushed_forced_ok():
         assert not os.path.exists(proj_path)
 
 
+@patch(
+    'workon.script.git.get_unstaged_info', Mock(return_value='oops')
+)
+def test_done_project_found_git_unstaged():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=False
+        )
+        with pytest.raises(ScriptError) as exc:
+            script.done(args)
+        assert 'oops' in str(exc.value)
+        assert os.path.exists(proj_path)
+
+
+@patch(
+    'workon.script.git.get_unstaged_info', Mock(return_value='oops')
+)
+def test_done_project_found_git_unstaged_forced_ok():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=True
+        )
+        script.done(args)
+        assert not os.path.exists(proj_path)
+
+
 def test_done_all_projects_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)

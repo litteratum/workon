@@ -26,6 +26,14 @@ def _remove_project(project, directory, force):
             % unpushed_info
         )
 
+    unstaged_changes = git.get_unstaged_info(proj_path)
+    if unstaged_changes and not force:
+        raise ScriptError(
+            'Wait a moment, you left some unstaged changes! Please, '
+            'take a look:\n%s\n\nIf you don\'t care, use "-f" flag'
+            % unstaged_changes
+        )
+
     logging.debug('Removing "%s"', proj_path)
     shutil.rmtree(proj_path)
 

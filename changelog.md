@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.0.3] - 2021-05-06
+
+### Added
+
+* `done` command now also checks unstaged changes
+
+### Fixed
+
+* Add `--no-open` flag to integration tests to prevent unwanted opens
+
 ## [0.0.2] - 2021-05-06
 
 ### Added

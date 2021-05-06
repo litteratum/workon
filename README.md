@@ -36,9 +36,14 @@ When you are done with your work, use `done` command:
 workon done [<my_project>]
 ```
 
-It will check if you did not forget to push your changes or leaved any stashes and then remove a project folder
-under a working directory. If there is something left, the command will fail. But as with `start` command, you
-always can use `-f/--force` flag if you are confident.
+It will check:
+
+* unpushed changes
+* leaved stashes
+* unstaged changes
+ 
+and then remove a project folder from the working directory. If there is something left, the command will fail. But as
+with `start` command, you always can use `-f/--force` flag if you are confident.
 
 If the command ran without arguments, it will remove ALL projects from a working directory.
 

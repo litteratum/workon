@@ -97,6 +97,25 @@ def test_get_unpushed_branches_info_not_a_git_repo():
         assert git.get_unpushed_branches_info(tmp_dir_path) == ''
 
 
+def test_get_unstaged_info_no_unstaged_returns_empty_str():
+    with TmpGitDir() as git_dir:
+        assert git.get_unstaged_info(git_dir.path) == ''
+
+
+def test_get_unstaged_info_not_a_git_repo():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        assert git.get_unstaged_info(tmp_dir_path) == ''
+
+
+def test_get_unstaged_info_with_unstaged_returns_info():
+    with TmpGitDir(initial_commit=True) as git_dir:
+        git_dir.checkout('test')
+        os.mknod(os.path.join(git_dir.path, '1.txt'))
+
+        info = git.get_unstaged_info(git_dir.path)
+        assert '?? 1.txt\n' in info
+
+
 @patch('workon.git.subprocess.run')
 def test_clone(mc_subprocess_run):
     with tempfile.TemporaryDirectory() as tmp_dir_path:

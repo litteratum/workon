@@ -30,6 +30,15 @@ def get_unpushed_branches_info(directory) -> str:
     ).stdout
 
 
+def get_unstaged_info(directory) -> str:
+    """Return information about unstaged changes."""
+    logging.info('Checking for unstaged changes under "%s"', directory)
+    return subprocess.run(
+        'git status --short'.split(),
+        cwd=directory, capture_output=True, text=True, check=False
+    ).stdout
+
+
 def clone(source, destination):
     """Clone a project from GIT `source` to `destination` directory."""
 

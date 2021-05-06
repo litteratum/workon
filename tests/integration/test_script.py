@@ -9,7 +9,7 @@ def test_start_clone_project_to_empty_folder():
         _, code = get_script_output(
             (
                 'start', 'a', '-s', 'http://localhost:10080/gogs',
-                '-d', tmp_dir_path
+                '-d', tmp_dir_path, '--no-open'
             )
         )
         assert code == 0
@@ -21,7 +21,7 @@ def test_start_clone_project_to_not_empty_folder():
         out, code = get_script_output(
             (
                 'start', 'a', '-s', 'http://localhost:10080/gogs',
-                '-d', tmp_dir_path
+                '-d', tmp_dir_path, '--no-open'
             )
         )
         assert 'not empty' in out
@@ -34,7 +34,7 @@ def test_start_clone_project_to_not_empty_folder_forced():
         _, code = get_script_output(
             (
                 'start', 'a', '-s', 'http://localhost:10080/gogs',
-                '-d', tmp_dir_path, '--force'
+                '-d', tmp_dir_path, '--force', '--no-open'
             )
         )
         assert code == 0
@@ -46,7 +46,7 @@ def test_start_clone_project_does_not_exist():
         out, code = get_script_output(
             (
                 'start', 'z', '-s', 'http://localhost:10080/gogs',
-                '-d', tmp_dir_path, '--force'
+                '-d', tmp_dir_path, '--force', '--no-open'
             )
         )
         assert 'not found' in out
