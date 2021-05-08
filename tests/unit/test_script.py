@@ -1,9 +1,8 @@
 """Tests for script.py."""
 import os
-import subprocess
 import tempfile
 from argparse import Namespace
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 
 import pytest
 from workon import script
@@ -247,6 +246,7 @@ def test_start_opens_specified_editor(mc_subprocess):
     mc_subprocess.run.return_value = Mock(returncode=0)
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
+        os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
             project='some', directory=tmp_dir_path, force=True, source='some',
             noopen=False, editor='code'
@@ -275,6 +275,7 @@ def test_start_no_editor(mc_subprocess):
     mc_subprocess.run.return_value = Mock(returncode=1)
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
+        os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
             project='some', directory=tmp_dir_path, force=True, source='some',
             noopen=False, editor='code'
@@ -294,6 +295,7 @@ def test_start_editor_from_env(mc_subprocess):
     mc_subprocess.run.side_effect = (Mock(returncode=1), Mock(returncode=0))
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
+        os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
             project='some', directory=tmp_dir_path, force=True, source='some',
             noopen=False, editor='code'
@@ -301,3 +303,41 @@ def test_start_editor_from_env(mc_subprocess):
 
         script.start(args)
         assert mc_subprocess.run.call_count == 2
+
+
+def test_open_no_such_project():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        args = Namespace(
+            project='some', directory=tmp_dir_path, editor='code'
+        )
+        with pytest.raises(ScriptError):
+            script.open(args)
+
+
+@patch('workon.script.subprocess')
+def test_open_ok(mc_subprocess):
+    mc_subprocess.run.return_value = Mock(returncode=0)
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tmp_proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        args = Namespace(
+            project=tmp_proj_path, directory=tmp_dir_path, editor='my_editor'
+        )
+
+        script.open(args)
+        mc_subprocess.run.assert_called_once_with(
+            ['my_editor', tmp_proj_path], check=False)
+
+
+@patch('workon.script.subprocess')
+def test_open_no_such_editor(mc_subprocess):
+    mc_subprocess.run.side_effect = (FileNotFoundError, Mock(returncode=0))
+    os.environ['EDITOR'] = 'some_env_editor'
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tmp_proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        args = Namespace(
+            project=tmp_proj_path, directory=tmp_dir_path, editor='my_editor'
+        )
+
+        script.open(args)
+        assert call(['some_env_editor', tmp_proj_path],
+                    check=False) in mc_subprocess.run.call_args_list

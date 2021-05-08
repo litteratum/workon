@@ -6,6 +6,11 @@
 
 * `done` command now also removes files
 * `done` command now really tries to remove all projects
+* `open` command for opening already started projects
+
+### Fixed
+
+* Correctly handle exception raised when specified editor does not exist
 
 ## [0.0.3] - 2021-05-06
 

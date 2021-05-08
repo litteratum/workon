@@ -68,3 +68,9 @@ def test_done_remove_all():
         _, code = get_script_output(['done', '-d', tmp_dir_path])
         assert code == 0
         assert len(os.listdir(tmp_dir_path)) == 0
+
+
+def test_open():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        _, code = get_script_output(['open', 'some', '-d', tmp_dir_path])
+        assert code == 1

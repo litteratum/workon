@@ -85,12 +85,36 @@ def start(args):
     git.clone(project_path, destination)
 
     if not args.noopen:
-        project_dir = os.path.join(args.directory, args.project)
-        for editor in (args.editor, os.environ.get('EDITOR'), 'vi', 'vim'):
-            if editor:
-                logging.info('Trying to open project with "%s"', editor)
+        _open_project(args)
+
+
+def open(args):
+    """Open the project in specified editor."""
+    _open_project(args)
+
+
+def _open_project(args):
+    logging.info('Opening "%s"', args.project)
+    project_dir = os.path.join(args.directory, args.project)
+
+    if not os.path.isdir(project_dir):
+        raise ScriptError(
+            'No project named "%s" found under your working directory'
+            % args.project
+        )
+
+    for editor in (args.editor, os.environ.get('EDITOR'), 'vi', 'vim'):
+        if editor:
+            logging.info('Trying to open project with "%s"', editor)
+            try:
                 result = subprocess.run([editor, project_dir], check=False)
+            except OSError as exc:
+                logging.error(
+                    'Failed to open "%s" with "%s": %s',
+                    args.project, args.editor, exc
+                )
+            else:
                 if result.returncode == 0:
                     break
-        else:
-            raise ScriptError('No suitable editor found to open your project')
+    else:
+        raise ScriptError('No suitable editor found to open your project')

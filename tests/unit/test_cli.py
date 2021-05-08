@@ -39,6 +39,16 @@ def test_parse_args_start_command_no_args_env_variables_set():
     )
 
 
+def test_parse_args_open_command():
+    sys.argv = ['workon', 'open', 'my_project']
+    os.environ['WORKON_DIR'] = '/tmp'
+    os.environ['WORKON_EDITOR'] = 'my_editor'
+    assert cli.parse_args() == Namespace(
+        command='open', directory='/tmp', verbose=0, project='my_project',
+        editor='my_editor'
+    )
+
+
 def test_parse_args_cli_arg_overrides_env_variable():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         sys.argv = ['workon', 'start', 'my_project', '-d', tmp_dir_path, '-vv']
