@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+* Tests coverage target to Makefile
+
 ## [0.0.4] - 2021-05-08
 
 ### Added

@@ -8,7 +8,10 @@ $(VENV):
 
 venv: $(VENV)
 
-clean:
+clean_coverage:
+	rm -rf .coverage htmlcov
+
+clean: clean_coverage
 	rm -rf venv build dist *.egg-info .mypy_cache
 	find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 	py3clean . -v
@@ -16,15 +19,17 @@ clean:
 install:
 	python3 setup.py install --user
 
-test_req:
-	$(VENV_PIP) install pytest
+test_req: venv
+	$(VENV_PIP) install pytest pytest-cov
 
-test: venv test_req
-	$(VENV_PIP) install pytest
+test: test_req
 	$(VENV)/bin/pytest -svvv tests/unit
 
-test_integration: venv test_req
+test_integration: test_req
 	$(VENV)/bin/pytest -svvv tests/integration
 
-test_all: venv test_req
+test_all: test_req
 	$(VENV)/bin/pytest -svvv tests
+
+coverage: test_req
+	pytest --cov-report html --cov=workon tests/
