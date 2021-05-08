@@ -272,6 +272,7 @@ def test_start_no_open(mc_subprocess):
 @patch('workon.script.git.clone', Mock())
 @patch('workon.script.subprocess')
 def test_start_no_editor(mc_subprocess):
+    os.environ['EDITOR'] = 'zzz'
     mc_subprocess.run.return_value = Mock(returncode=1)
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:

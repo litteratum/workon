@@ -6,6 +6,10 @@
 
 * Tests coverage target to Makefile
 
+### Fixed
+
+* Made some unit tests to be environment-agnostic
+
 ## [0.0.4] - 2021-05-08
 
 ### Added

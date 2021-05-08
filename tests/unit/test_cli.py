@@ -16,7 +16,8 @@ def test_parse_args_no_args():
 
 
 def test_parse_args_command_no_args():
-    del os.environ['WORKON_DIR']
+    if os.environ.get('WORKON_DIR'):
+        del os.environ['WORKON_DIR']
     sys.argv = ['workon', 'start', 'my_project']
 
     with pytest.raises(ScriptError):
