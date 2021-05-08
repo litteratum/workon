@@ -143,6 +143,26 @@ def test_done_all_projects_removed():
 
         assert len(os.listdir(tmp_dir_path)) == 0
 
+
+@patch('workon.script.git.is_stash_empty')
+def test_done_all_projects_couple_are_dirty_but_all_tried_to_be_removed(
+        mc_is_stash_empty):
+    mc_is_stash_empty.side_effect = (
+        ScriptError, True, ScriptError, True
+    )
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(directory=tmp_dir_path, project=None, force=False)
+        script.done(args)
+
+        assert len(os.listdir(tmp_dir_path)) == 2
+
+
 def test_done_all_projects_removed_all_files_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)

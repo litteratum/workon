@@ -55,10 +55,15 @@ def done(args):
     else:
         for project in projects:
             if os.path.isdir(os.path.join(args.directory, project)):
-                _remove_project(project, args.directory, args.force)
+                try:
+                    _remove_project(project, args.directory, args.force)
+                except ScriptError as exc:
+                    logging.error(exc)
+                    continue
         # there may be some files left
         for filepath in glob.glob(os.path.join(args.directory, '*')):
-            os.remove(filepath)
+            if os.path.isfile(filepath):
+                os.remove(filepath)
 
 
 def start(args):

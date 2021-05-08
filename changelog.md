@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+* `done` command now also removes files
+* `done` command now really tries to remove all projects
+
 ## [0.0.3] - 2021-05-06
 
 ### Added
