@@ -5,10 +5,16 @@
 ### Added
 
 * Tests coverage target to Makefile
+* `open` command description
+* Improve force logs for `done` command
 
 ### Fixed
 
 * Made some unit tests to be environment-agnostic
+
+### Changed
+
+* Remove `-f/--force` flag from `start` command. Allow multiple projects
 
 ## [0.0.4] - 2021-05-08
 

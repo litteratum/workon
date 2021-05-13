@@ -46,6 +46,19 @@ If the command ran without arguments, it will remove ALL projects from a working
 
 See `workon done --help` for other available options on how to control the command.
 
+#### Open a project
+
+Usually, you don't want to remember where are your projects are stored, but you need to open them. That's why `open`
+command exists.
+
+Usually, it is enough to run:
+
+```bash
+workon open <my_project>
+```
+
+See `workon open --help` for other available options on how to control the command.
+
 ### Configuration
 
 The script's commands can be fully controlled by CLI arguments, but a couple of environment variables are supported for

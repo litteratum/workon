@@ -15,15 +15,15 @@ def _remove_project(project, directory, force):
 
     if not git.is_stash_empty(proj_path) and not force:
         raise ScriptError(
-            'Wait a moment, you left some stashes! If you don\'t '
-            'care, use "-f" flag'
+            'Wait a moment, you have left some stashes! If you are confident, '
+            'use "-f" flag'
         )
 
     unpushed_info = git.get_unpushed_branches_info(proj_path)
     if unpushed_info and not force:
         raise ScriptError(
             'Wait a moment, you left some unpushed commits! Please, '
-            'take a look:\n%s\n\nIf you don\'t care, use "-f" flag'
+            'take a look:\n%s\n\nIf you are confident, use "-f" flag'
             % unpushed_info
         )
 
@@ -31,7 +31,7 @@ def _remove_project(project, directory, force):
     if unstaged_changes and not force:
         raise ScriptError(
             'Wait a moment, you left some unstaged changes! Please, '
-            'take a look:\n%s\n\nIf you don\'t care, use "-f" flag'
+            'take a look:\n%s\n\nIf you are confident, use "-f" flag'
             % unstaged_changes
         )
 
