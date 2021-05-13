@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='workon',
-    version='0.0.4',
+    version='0.1.0',
     author='Andrey Nechaev',
     author_email='andrewnech@gmail.com',
     packages=find_packages(exclude=('tests.*', 'tests')),
