@@ -18,12 +18,6 @@ def _append_start_command(subparsers, parent):
         default=os.environ.get('WORKON_GIT_SOURCE')
     )
     start_command.add_argument(
-        '-f', '--force', help=(
-            'force GIT clone even if your working directory'
-            ' is not empty'
-        ), action='store_true'
-    )
-    start_command.add_argument(
         '-e', '--editor', help='editor to use to open a project',
         default=os.environ.get('WORKON_EDITOR')
     )

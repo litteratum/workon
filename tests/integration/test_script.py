@@ -24,17 +24,16 @@ def test_start_clone_project_to_not_empty_folder():
                 '-d', tmp_dir_path, '--no-open'
             )
         )
-        assert 'not empty' in out
-        assert code == 1
+        assert code == 0
 
 
-def test_start_clone_project_to_not_empty_folder_forced():
+def test_start_clone_project_to_not_empty_folder():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)
         _, code = get_script_output(
             (
                 'start', 'a', '-s', 'http://localhost:10080/gogs',
-                '-d', tmp_dir_path, '--force', '--no-open'
+                '-d', tmp_dir_path, '--no-open'
             )
         )
         assert code == 0
@@ -46,7 +45,7 @@ def test_start_clone_project_does_not_exist():
         out, code = get_script_output(
             (
                 'start', 'z', '-s', 'http://localhost:10080/gogs',
-                '-d', tmp_dir_path, '--force', '--no-open'
+                '-d', tmp_dir_path, '--no-open'
             )
         )
         assert 'not found' in out

@@ -174,21 +174,8 @@ def test_done_all_projects_removed_all_files_removed():
         assert len(os.listdir(tmp_dir_path)) == 0
 
 
-def test_start_working_directory_is_not_empty_error_raised():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        tempfile.mkdtemp(dir=tmp_dir_path)
-
-        args = Namespace(
-            project='some', directory=tmp_dir_path, force=False, noopen=True
-        )
-
-        with pytest.raises(ScriptError) as exc:
-            script.start(args)
-        assert 'not empty' in str(exc.value)
-
-
 @patch('workon.script.git.clone')
-def test_start_working_directory_is_not_empty_forced(mc_clone):
+def test_start_working_directory_is_not_empty(mc_clone):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)
         proj_path = os.path.join(tmp_dir_path, 'some')
@@ -196,7 +183,7 @@ def test_start_working_directory_is_not_empty_forced(mc_clone):
         mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
 
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=True, source='some',
+            project='some', directory=tmp_dir_path, source='some',
             noopen=True
         )
         script.start(args)
@@ -209,7 +196,7 @@ def test_start_no_such_project(mc_clone):
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=False, source='some',
+            project='some', directory=tmp_dir_path, source='some',
             noopen=True
         )
 
@@ -231,7 +218,7 @@ def test_start_cloned(mc_clone, source, expected_source):
         proj_path = os.path.join(tmp_dir_path, 'some')
         mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=False,
+            project='some', directory=tmp_dir_path,
             source=source, noopen=True
         )
         script.start(args)
@@ -248,7 +235,7 @@ def test_start_opens_specified_editor(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=True, source='some',
+            project='some', directory=tmp_dir_path, source='some',
             noopen=False, editor='code'
         )
         script.start(args)
@@ -262,7 +249,7 @@ def test_start_opens_specified_editor(mc_subprocess):
 def test_start_no_open(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=True, source='some',
+            project='some', directory=tmp_dir_path, source='some',
             noopen=True
         )
         script.start(args)
@@ -278,7 +265,7 @@ def test_start_no_editor(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=True, source='some',
+            project='some', directory=tmp_dir_path, source='some',
             noopen=False, editor='code'
         )
 
@@ -298,7 +285,7 @@ def test_start_editor_from_env(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
-            project='some', directory=tmp_dir_path, force=True, source='some',
+            project='some', directory=tmp_dir_path, source='some',
             noopen=False, editor='code'
         )
 

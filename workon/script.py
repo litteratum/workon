@@ -74,12 +74,6 @@ def start(args):
     """
     logging.info('Setting up "%s"', args.project)
 
-    if len(os.listdir(args.directory)) > 0 and not args.force:
-        raise ScriptError(
-            'Your working directory is not empty. It is encouraged that you '
-            'start with a clean desk.\nUse -f/--force flag if you insist on it'
-        )
-
     project_path = args.source.strip('/') + '/' + args.project + '.git'
     destination = args.directory + '/{}'.format(args.project)
     git.clone(project_path, destination)

@@ -35,7 +35,7 @@ def test_parse_args_start_command_no_args_env_variables_set():
     os.environ['WORKON_EDITOR'] = 'my_editor'
 
     assert cli.parse_args() == Namespace(
-        command='start', directory='/tmp', force=False, source='some',
+        command='start', directory='/tmp', source='some',
         verbose=0, project='my_project', noopen=False, editor='my_editor'
     )
 
@@ -58,7 +58,7 @@ def test_parse_args_cli_arg_overrides_env_variable():
         os.environ['WORKON_EDITOR'] = 'code'
 
         assert cli.parse_args() == Namespace(
-            command='start', directory=tmp_dir_path, force=False,
+            command='start', directory=tmp_dir_path,
             source='some', verbose=2, project='my_project', noopen=False,
             editor='code'
         )

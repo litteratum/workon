@@ -23,9 +23,6 @@ workon start <my_project>
 It will clone "my_project" from the GIT source, save it to the working directory and open the project in the specified
 editor. Please refer to the [Configuration section](#configuration) to know how to configure the script.
 
-It is encouraged that your desk is clean when you start with a new work, so the command will fail if you have
-something unfinished. But sometimes it is really needed, so there is `-f/--force` flag to proceed.
-
 See `workon start --help` for other available options on how to control the command.
 
 #### Finish your work with a project
@@ -42,8 +39,8 @@ It will check:
 * leaved stashes
 * unstaged changes
  
-and then remove a project folder from the working directory. If there is something left, the command will fail. But as
-with `start` command, you always can use `-f/--force` flag if you are confident.
+and then remove a project folder from the working directory. If there is something left, the command will fail. But you
+can use `-f/--force` flag if you are confident.
 
 If the command ran without arguments, it will remove ALL projects from a working directory.
 
