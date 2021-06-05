@@ -1,5 +1,6 @@
 """Tests for script.py."""
 import os
+import json
 import tempfile
 from argparse import Namespace
 from unittest.mock import Mock, patch, call
@@ -183,7 +184,7 @@ def test_start_working_directory_is_not_empty(mc_clone):
         mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
 
         args = Namespace(
-            project='some', directory=tmp_dir_path, source='some',
+            project='some', directory=tmp_dir_path, source=['some'],
             noopen=True
         )
         script.start(args)
@@ -196,7 +197,7 @@ def test_start_no_such_project(mc_clone):
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         args = Namespace(
-            project='some', directory=tmp_dir_path, source='some',
+            project='some', directory=tmp_dir_path, source=['some'],
             noopen=True
         )
 
@@ -219,7 +220,7 @@ def test_start_cloned(mc_clone, source, expected_source):
         mc_clone.side_effect = lambda *args, **kwargs: os.mkdir(proj_path)
         args = Namespace(
             project='some', directory=tmp_dir_path,
-            source=source, noopen=True
+            source=[source], noopen=True
         )
         script.start(args)
         assert os.path.isdir(proj_path)
@@ -259,7 +260,6 @@ def test_start_no_open(mc_subprocess):
 @patch('workon.script.git.clone', Mock())
 @patch('workon.script.subprocess')
 def test_start_no_editor(mc_subprocess):
-    os.environ['EDITOR'] = 'zzz'
     mc_subprocess.run.return_value = Mock(returncode=1)
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -279,7 +279,6 @@ def test_start_no_editor(mc_subprocess):
 @patch('workon.script.git.clone', Mock())
 @patch('workon.script.subprocess')
 def test_start_editor_from_env(mc_subprocess):
-    os.environ['EDITOR'] = 'zzz'
     mc_subprocess.run.side_effect = (Mock(returncode=1), Mock(returncode=0))
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -299,7 +298,7 @@ def test_open_no_such_project():
             project='some', directory=tmp_dir_path, editor='code'
         )
         with pytest.raises(ScriptError):
-            script.open(args)
+            script.open_project(args)
 
 
 @patch('workon.script.subprocess')
@@ -311,7 +310,7 @@ def test_open_ok(mc_subprocess):
             project=tmp_proj_path, directory=tmp_dir_path, editor='my_editor'
         )
 
-        script.open(args)
+        script.open_project(args)
         mc_subprocess.run.assert_called_once_with(
             ['my_editor', tmp_proj_path], check=False)
 
@@ -326,6 +325,51 @@ def test_open_no_such_editor(mc_subprocess):
             project=tmp_proj_path, directory=tmp_dir_path, editor='my_editor'
         )
 
-        script.open(args)
+        script.open_project(args)
         assert call(['some_env_editor', tmp_proj_path],
                     check=False) in mc_subprocess.run.call_args_list
+
+
+def test_get_config():
+    config = {'dir': 'some'}
+    with tempfile.NamedTemporaryFile('w+') as file:
+        json.dump(config, file)
+        file.flush()
+
+        with patch('workon.script.CONFIG_PATH', file.name):
+            assert script.get_config() == config
+
+
+def test_get_config_no_config_file():
+    with patch('workon.script.CONFIG_PATH', 'nonexistent'):
+        assert script.get_config() == {}
+
+
+def test_get_config_wrong_json_file():
+    with tempfile.NamedTemporaryFile('w+') as file:
+        file.write('oops')
+        file.flush()
+
+        with patch('workon.script.CONFIG_PATH', file.name):
+            assert script.get_config() == {}
+
+
+@pytest.mark.parametrize('whats_wrong', [
+    'dir', 'editor', 'source',
+])
+def test_get_config_invalid_config(whats_wrong):
+    config = {
+        'dir': 'some',
+        'source': ['some', ],
+        'editor': 'some'
+    }
+
+    config[whats_wrong] = 1
+
+    with tempfile.NamedTemporaryFile('w+') as file:
+        json.dump(config, file)
+        file.flush()
+
+        with patch('workon.script.CONFIG_PATH', file.name):
+            with pytest.raises(ScriptError):
+                script.get_config()

@@ -1,4 +1,5 @@
 """setup.py for the script."""
+import os
 from setuptools import setup, find_packages
 
 setup(
@@ -10,4 +11,7 @@ setup(
     entry_points={
         'console_scripts': ['workon = workon.main:main']
     },
+    data_files=[
+        (os.path.expanduser('~/.config/workon/'), ['config.json']),
+    ]
 )

@@ -21,7 +21,8 @@ def init_logger(verbose):
 def main():
     """Execute the script commands."""
     try:
-        args = cli.parse_args()
+        user_config = script.get_config()
+        args = cli.parse_args(user_config)
         init_logger(args.verbose)
 
         if args.command == 'start':
@@ -29,7 +30,7 @@ def main():
         elif args.command == 'done':
             script.done(args)
         elif args.command == 'open':
-            script.open(args)
+            script.open_project(args)
     except errors.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)

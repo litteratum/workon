@@ -61,17 +61,14 @@ See `workon open --help` for other available options on how to control the comma
 
 ### Configuration
 
-The script's commands can be fully controlled by CLI arguments, but a couple of environment variables are supported for
-convenience:
+The script's commands can be fully controlled by CLI arguments, but it is much convenient to adjust the configuration
+file located under `~/.config/workon/config.json`:
 
-* `WORKON_GIT_SOURCE` - the project will be cloned from this source. Examples: "https://github.com/<my_username>",
-  "git@github.com:<my_username>". May be overridden by `-s/--source` argument
-* `WORKON_DIR` - the directory to which projects will be cloned. May be overridden by `-d/--directory` argument
-* `WORKON_EDITOR` - the editor used to open a cloned project. May be overridden by `-e/--editor` argument. If not
+* `source` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
+  Examples: "https://github.com/<my_username>", "git@github.com:<my_username>". May be overridden by `-s/--source`
+  argument. You can also define multiple sources: `-s first second -s third`
+* `dir` - the directory to which projects will be cloned. May be overridden by `-d/--directory` argument. `~` in path
+  is supported
+* `editor` - the editor used to open a cloned project. May be overridden by `-e/--editor` argument. If not
   specified and `-e/--editor` argument is not provided, the script will try to use the editor specified by `$EDITOR`
-  environment variable. If that variable not set, the script will try `vi` and `vim` consequently.
-
-It is expected, that you will set all those variables once and then will only override them with CLI arguments when
-needed.
-
-The script will fail if both CLI argument not specified and environment variables are not set (except `WORKON_EDITOR`).
+  environment variable. If that variable is not set, the script will try `vi` and `vim` consequently

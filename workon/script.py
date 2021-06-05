@@ -1,5 +1,6 @@
 """Script main module."""
 import glob
+import json
 import logging
 import os
 import shutil
@@ -7,6 +8,39 @@ import subprocess
 
 from . import git
 from .errors import ScriptError
+
+
+CONFIG_PATH = os.path.expanduser('~/.config/workon/config.json')
+
+
+def _validate_config(config):
+    if config.get('dir') and not isinstance(config['dir'], str):
+        raise ScriptError(
+            'Invalid config: "dir" parameter should be of string type')
+    if config.get('editor') and not isinstance(config['editor'], str):
+        raise ScriptError(
+            'Invalid config: "editor" parameter should be of string type')
+    if config.get('source') and not isinstance(config['source'], list):
+        raise ScriptError(
+            'Invalid config: "source" parameter should be of array type')
+
+    return config
+
+
+def get_config():
+    """Return config loaded from `CONFIG_PATH`."""
+    try:
+        with open(CONFIG_PATH) as file:
+            config = json.load(file)
+    except json.JSONDecodeError as exc:
+        logging.warning('Failed to load user config file: %s. Skipping', exc)
+        config = {}
+    except OSError as exc:
+        logging.warning(
+            'Failed to load user configuration file: %s. Skipping', exc)
+        config = {}
+
+    return _validate_config(config)
 
 
 def _remove_project(project, directory, force):
@@ -74,21 +108,28 @@ def start(args):
     """
     logging.info('Setting up "%s"', args.project)
 
-    project_path = args.source.strip('/') + '/' + args.project + '.git'
-    destination = args.directory + '/{}'.format(args.project)
-    git.clone(project_path, destination)
+    for i, source in enumerate(args.source, start=1):
+        project_path = source.strip('/') + '/' + args.project + '.git'
+        destination = args.directory + '/{}'.format(args.project)
+
+        try:
+            git.clone(project_path, destination)
+            break
+        except ScriptError as exc:
+            if i == len(args.source):
+                raise
+            logging.warning('%s. Will try the next source', exc)
 
     if not args.noopen:
         _open_project(args)
 
 
-def open(args):
+def open_project(args):
     """Open the project in specified editor."""
     _open_project(args)
 
 
 def _open_project(args):
-    logging.info('Opening "%s"', args.project)
     project_dir = os.path.join(args.directory, args.project)
 
     if not os.path.isdir(project_dir):
@@ -99,7 +140,8 @@ def _open_project(args):
 
     for editor in (args.editor, os.environ.get('EDITOR'), 'vi', 'vim'):
         if editor:
-            logging.info('Trying to open project with "%s"', editor)
+            logging.info(
+                'Trying to open "%s" with "%s" editor', args.project, editor)
             try:
                 result = subprocess.run([editor, project_dir], check=False)
             except OSError as exc:

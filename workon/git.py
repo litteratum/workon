@@ -41,7 +41,6 @@ def get_unstaged_info(directory) -> str:
 
 def clone(source, destination):
     """Clone a project from GIT `source` to `destination` directory."""
-
     try:
         logging.info('Cloning "%s" to "%s"', source, destination)
         subprocess.run(

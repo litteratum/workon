@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0] - 2021-06-05
+
+### Changed
+
+* Use configuration file instead of environment variables
+
+
 ## [0.1.0] - 2021-05-13
 
 ### Added
