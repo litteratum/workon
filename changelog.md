@@ -6,6 +6,10 @@
 
 * `done` command: also remove named pipes and symbolic links
 
+### Added
+
+* Describe how to run integration tests
+
 ## [0.2.0] - 2021-06-05
 
 ### Changed
