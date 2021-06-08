@@ -65,7 +65,16 @@ The script's commands can be fully controlled by CLI arguments, but it is much c
 file located under `~/.config/workon/config.json`:
 
 * `source` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
-  Examples: "https://github.com/<my_username>", "git@github.com:<my_username>". May be overridden by `-s/--source`
+  Example:
+  
+  ```json
+  "source": [
+    "https://github.com/<my_username>",
+    "git@github.com:<my_username>"
+  ]
+  ```
+
+  May be overridden by `-s/--source`
   argument. You can also define multiple sources: `-s first second -s third`
 * `dir` - the directory to which projects will be cloned. May be overridden by `-d/--directory` argument. `~` in path
   is supported
