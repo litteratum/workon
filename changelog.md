@@ -1,11 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+* `done` command: also remove named pipes and symbolic links
+
 ## [0.2.0] - 2021-06-05
 
 ### Changed
 
 * Use configuration file instead of environment variables
-
 
 ## [0.1.0] - 2021-05-13
 
@@ -55,7 +60,6 @@
 ### Fixed
 
 * Small script help fixes/improvements
-
 
 ## [0.0.1] - 2021-05-05
 

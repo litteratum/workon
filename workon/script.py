@@ -96,7 +96,9 @@ def done(args):
                     continue
         # there may be some files left
         for filepath in glob.glob(os.path.join(args.directory, '*')):
-            if os.path.isfile(filepath):
+            if os.path.islink(filepath):
+                os.unlink(filepath)
+            elif not os.path.isdir(filepath):
                 os.remove(filepath)
 
 

@@ -42,6 +42,26 @@ def test_done_project_found_and_removed():
         assert not os.path.exists(proj_path)
 
 
+def test_done_all_filetypes_removed():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        # project dir
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        # regular file
+        tempfile.mktemp(dir=tmp_dir_path)
+        # symlink
+        src = tempfile.mktemp(dir=tmp_dir_path)
+        dst = tempfile.mktemp(dir=tmp_dir_path)
+        os.symlink(src, dst)
+        # namedpipe
+        os.mkfifo(os.path.join(tmp_dir_path, 'tmppipe'), 0o600)
+
+        args = Namespace(
+            project=None, directory=tmp_dir_path, force=False
+        )
+        script.done(args)
+        assert not os.listdir(tmp_dir_path)
+
+
 @patch('workon.script.git.is_stash_empty', Mock(return_value=False))
 def test_done_project_found_git_stashed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
