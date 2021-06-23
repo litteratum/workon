@@ -1,5 +1,6 @@
 """Tests for git.py."""
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -58,21 +59,22 @@ class TmpGitDir:
         shutil.rmtree(self.path)
 
 
-def test_is_stash_empty_returns_true_when_stash_is_empty():
+def test_get_stash_info_returns_empty_str_if_no_stash():
     with TmpGitDir() as git_repo:
-        assert git.is_stash_empty(git_repo.path)
+        assert git.get_stash_info(git_repo.path) == ''
 
 
-def test_is_stash_empty_returns_false_when_stash_is_not_empty():
+def test_get_stash_info_returns_info_when_there_is_some_stash():
     with TmpGitDir(initial_commit=True) as git_dir:
         os.mknod(os.path.join(git_dir.path, '1.txt'))
         git_dir.stash()
-        assert not git.is_stash_empty(git_dir.path)
+        pattern = r'stash@\{0\}: WIP on master: .+? dummy'
+        assert re.match(pattern, git.get_stash_info(git_dir.path))
 
 
-def test_is_stash_empty_not_a_git_repo():
+def test_get_stash_info_not_a_git_repo_returns_empty_str():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        assert git.is_stash_empty(tmp_dir_path)
+        assert git.get_stash_info(tmp_dir_path) == ''
 
 
 def test_get_unpushed_branches_info_no_unpushed_returns_empty_str():

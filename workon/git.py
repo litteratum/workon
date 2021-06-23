@@ -5,17 +5,13 @@ import subprocess
 from .errors import ScriptError
 
 
-def is_stash_empty(directory):
-    """Return True if stash under `directory` is empty, False - otherwise."""
+def get_stash_info(directory):
+    """Return stash info under `directory`."""
     logging.info('Checking GIT stashes under "%s"', directory)
-    res = subprocess.run(
+    return subprocess.run(
         'git stash list'.split(), cwd=directory,
         capture_output=True, text=True, check=False
-    )
-
-    if res.stdout:
-        return False
-    return True
+    ).stdout
 
 
 def get_unpushed_branches_info(directory) -> str:

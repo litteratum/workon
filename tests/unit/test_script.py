@@ -62,7 +62,7 @@ def test_done_all_filetypes_removed():
         assert not os.listdir(tmp_dir_path)
 
 
-@patch('workon.script.git.is_stash_empty', Mock(return_value=False))
+@patch('workon.script.git.get_stash_info', Mock(return_value='stash'))
 def test_done_project_found_git_stashed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -76,7 +76,7 @@ def test_done_project_found_git_stashed_error_raised():
         assert os.path.exists(proj_path)
 
 
-@patch('workon.script.git.is_stash_empty', Mock(return_value=False))
+@patch('workon.script.git.get_stash_info', Mock(return_value='stash'))
 def test_done_project_found_git_stashed_forced_ok():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -164,11 +164,11 @@ def test_done_all_projects_removed():
         assert len(os.listdir(tmp_dir_path)) == 0
 
 
-@patch('workon.script.git.is_stash_empty')
+@patch('workon.script.git.get_stash_info')
 def test_done_all_projects_couple_are_dirty_but_all_tried_to_be_removed(
-        mc_is_stash_empty):
-    mc_is_stash_empty.side_effect = (
-        ScriptError, True, ScriptError, True
+        mc_get_stash_info):
+    mc_get_stash_info.side_effect = (
+        ScriptError, '', ScriptError, ''
     )
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
