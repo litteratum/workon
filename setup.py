@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='workon',
-    version='0.1.0',
+    version='0.2.1',
     author='Andrey Nechaev',
     author_email='andrewnech@gmail.com',
     packages=find_packages(exclude=('tests.*', 'tests')),

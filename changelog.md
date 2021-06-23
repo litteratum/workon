@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [0.2.1] - 2021-06-23
 
 ### Fixed
 
@@ -9,6 +9,7 @@
 ### Added
 
 * Describe how to run integration tests
+* Show detailed information about left stashes
 
 ## [0.2.0] - 2021-06-05
 
