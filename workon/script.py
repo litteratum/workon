@@ -168,4 +168,4 @@ def _open_project(directory, project, editor):
                 if result.returncode == 0:
                     break
     else:
-        raise ScriptError('No suitable editor found to open "%s"', project)
+        raise ScriptError('No suitable editor found to open "%s"' % project)
