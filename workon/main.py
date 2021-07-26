@@ -29,8 +29,6 @@ def main():
             script.start(args)
         elif args.command == 'done':
             script.done(args)
-        elif args.command == 'open':
-            script.open_project(args)
     except errors.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)

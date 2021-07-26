@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+### Removed
+* `open` command
+
+
 ## [0.2.1] - 2021-06-23
 
 ### Fixed

@@ -127,11 +127,6 @@ def start(args):
         _open_project(args)
 
 
-def open_project(args):
-    """Open the project in specified editor."""
-    _open_project(args)
-
-
 def _open_project(args):
     project_dir = os.path.join(args.directory, args.project)
 

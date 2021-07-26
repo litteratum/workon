@@ -53,18 +53,6 @@ def test_parse_args_start_command_source_extended_from_config():
     )
 
 
-def test_parse_args_open_command():
-    sys.argv = ['workon', 'open', 'my_project']
-    user_config = {
-        'dir': '/tmp', 'editor': 'my_editor'
-    }
-
-    assert cli.parse_args(user_config) == Namespace(
-        command='open', directory='/tmp', verbose=0, project='my_project',
-        editor='my_editor'
-    )
-
-
 def test_parse_args_cli_arg_overrides_config_variable():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         sys.argv = ['workon', 'start', 'my_project', '-d', tmp_dir_path, '-vv']

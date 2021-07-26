@@ -59,21 +59,6 @@ def _append_done_command(subparsers, parent):
     )
 
 
-def _append_open_command(subparsers, parent, user_config):
-    open_command = subparsers.add_parser(
-        'open', help='open an already started project',
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        parents=[parent], add_help=False,
-    )
-
-    open_command.add_argument(
-        'project', help='project name under working directory to open')
-
-    open_command.add_argument(
-        '-e', '--editor', help='editor to use to open a project',
-        default=user_config.get('editor')
-    )
-
 
 def _parse_args(user_config):
     parser = argparse.ArgumentParser()
@@ -95,7 +80,6 @@ def _parse_args(user_config):
 
     _append_start_command(subparsers, parent_parser, user_config)
     _append_done_command(subparsers, parent_parser)
-    _append_open_command(subparsers, parent_parser, user_config)
 
     return parser.parse_args()
 

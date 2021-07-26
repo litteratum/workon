@@ -312,44 +312,6 @@ def test_start_editor_from_env(mc_subprocess):
         assert mc_subprocess.run.call_count == 2
 
 
-def test_open_no_such_project():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        args = Namespace(
-            project='some', directory=tmp_dir_path, editor='code'
-        )
-        with pytest.raises(ScriptError):
-            script.open_project(args)
-
-
-@patch('workon.script.subprocess')
-def test_open_ok(mc_subprocess):
-    mc_subprocess.run.return_value = Mock(returncode=0)
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        tmp_proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
-        args = Namespace(
-            project=tmp_proj_path, directory=tmp_dir_path, editor='my_editor'
-        )
-
-        script.open_project(args)
-        mc_subprocess.run.assert_called_once_with(
-            ['my_editor', tmp_proj_path], check=False)
-
-
-@patch('workon.script.subprocess')
-def test_open_no_such_editor(mc_subprocess):
-    mc_subprocess.run.side_effect = (FileNotFoundError, Mock(returncode=0))
-    os.environ['EDITOR'] = 'some_env_editor'
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        tmp_proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
-        args = Namespace(
-            project=tmp_proj_path, directory=tmp_dir_path, editor='my_editor'
-        )
-
-        script.open_project(args)
-        assert call(['some_env_editor', tmp_proj_path],
-                    check=False) in mc_subprocess.run.call_args_list
-
-
 def test_get_config():
     config = {'dir': 'some'}
     with tempfile.NamedTemporaryFile('w+') as file:
