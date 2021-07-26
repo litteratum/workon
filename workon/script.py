@@ -53,24 +53,25 @@ def _remove_project(project, directory, force):
     stashes_info = git.get_stash_info(proj_path)
     if stashes_info and not force:
         raise ScriptError(
-            'Wait a moment, you have left some stashes! Please, take a look:'
-            '\n%s\nIf you are confident, use "-f" flag' % stashes_info
+            'There are stashes left for "%s"! Please, take a look:'
+            '\n%s\nIf you are confident, use "-f" flag'
+            % (project, stashes_info)
         )
 
     unpushed_info = git.get_unpushed_branches_info(proj_path)
     if unpushed_info and not force:
         raise ScriptError(
-            'Wait a moment, you have left some unpushed commits! Please, '
+            'There are unpushed commits left for "%s"! Please, '
             'take a look:\n%s\nIf you are confident, use "-f" flag'
-            % unpushed_info
+            % (project, unpushed_info)
         )
 
     unstaged_changes = git.get_unstaged_info(proj_path)
     if unstaged_changes and not force:
         raise ScriptError(
-            'Wait a moment, you have left some unstaged changes! Please, '
+            'There are unstaged changes left for "%s"! Please, '
             'take a look:\n%s\nIf you are confident, use "-f" flag'
-            % unstaged_changes
+            % (project, unstaged_changes)
         )
 
     logging.debug('Removing "%s"', proj_path)
@@ -101,8 +102,10 @@ def done(args):
         # there may be some files left
         for filepath in glob.glob(os.path.join(args.directory, '*')):
             if os.path.islink(filepath):
+                logging.debug('Removing symlink "%s"', filepath)
                 os.unlink(filepath)
             elif not os.path.isdir(filepath):
+                logging.debug('Removing file "%s"', filepath)
                 os.remove(filepath)
 
 
@@ -159,11 +162,10 @@ def _open_project(directory, project, editor):
                 result = subprocess.run([editor, project_dir], check=False)
             except OSError as exc:
                 logging.error(
-                    'Failed to open "%s" with "%s": %s',
-                    project, editor, exc
+                    'Failed to open "%s" with "%s": %s', project, editor, exc
                 )
             else:
                 if result.returncode == 0:
                     break
     else:
-        raise ScriptError('No suitable editor found to open your project')
+        raise ScriptError('No suitable editor found to open "%s"', project)

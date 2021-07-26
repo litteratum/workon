@@ -7,11 +7,7 @@ from . import cli, script
 
 def init_logger(verbose):
     """Initialize logger based on `verbose`."""
-    level = logging.ERROR
-    if verbose == 1:
-        level = logging.INFO
-    elif verbose > 1:
-        level = logging.DEBUG
+    level = logging.DEBUG if verbose >= 1 else logging.INFO
 
     logging.basicConfig(
         level=level, format='%(message)s'
