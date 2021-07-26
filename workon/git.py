@@ -2,7 +2,9 @@
 import logging
 import subprocess
 
-from .errors import ScriptError
+
+class GITError(Exception):
+    """Any error related with GIT usage."""
 
 
 def get_stash_info(directory):
@@ -44,5 +46,5 @@ def clone(source, destination):
             check=True, capture_output=True, text=True
         )
     except subprocess.CalledProcessError as exc:
-        raise ScriptError(
+        raise GITError(
             'Failed to clone "%s":\n%s' % (source, exc.stderr)) from exc

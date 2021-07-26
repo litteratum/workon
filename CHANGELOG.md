@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Removed
 * `open` command
+* `errors.py` module. Now all script exceptions live inside `script.py` module
 
 ### Changed
 * `start` command now opens a project if it exists

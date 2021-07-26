@@ -7,10 +7,13 @@ import shutil
 import subprocess
 
 from . import git
-from .errors import ScriptError
 
 
 CONFIG_PATH = os.path.expanduser('~/.config/workon/config.json')
+
+
+class ScriptError(Exception):
+    """Error in script."""
 
 
 def _validate_config(config):
@@ -130,7 +133,7 @@ def start(args):
         try:
             git.clone(project_path, destination)
             break
-        except ScriptError as exc:
+        except git.GITError as exc:
             if i == len(args.source):
                 raise
             logging.warning('%s. Will try the next source', exc)

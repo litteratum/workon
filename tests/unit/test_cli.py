@@ -6,7 +6,7 @@ from argparse import Namespace
 
 import pytest
 from workon import cli
-from workon.errors import ScriptError
+from workon.script import ScriptError
 
 
 def test_parse_args_no_args():

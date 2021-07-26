@@ -2,7 +2,7 @@
 import argparse
 import os
 
-from .errors import ScriptError
+from .script import ScriptError
 
 
 # pylint:disable=too-few-public-methods

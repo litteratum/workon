@@ -135,7 +135,7 @@ def test_clone_no_such_project(mc_subprocess_run):
     )
     with tempfile.TemporaryDirectory() as tmp_dir_path:
 
-        with pytest.raises(ScriptError) as exc:
+        with pytest.raises(git.GITError) as exc:
             git.clone('http://localhost:3000/gogs/c', tmp_dir_path)
         assert 'not found' in str(exc.value)
 
@@ -150,6 +150,6 @@ def test_clone_already_exists(mc_subprocess_run):
         os.mkdir(directory)
         os.mknod(os.path.join(directory, 'some'))
 
-        with pytest.raises(ScriptError) as exc:
+        with pytest.raises(git.GITError) as exc:
             git.clone('http://localhost:3000/gogs/a', tmp_dir_path)
         assert 'already exists' in str(exc.value)

@@ -2,7 +2,7 @@
 import logging
 import sys
 
-from . import cli, errors, script
+from . import cli, script
 
 
 def init_logger(verbose):
@@ -29,7 +29,7 @@ def main():
             script.start(args)
         elif args.command == 'done':
             script.done(args)
-    except errors.ScriptError as exc:
+    except script.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)
 

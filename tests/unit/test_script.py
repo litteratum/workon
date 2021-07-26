@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 from workon import script
-from workon.errors import ScriptError
+from workon.script import ScriptError
 
 
 def test_done_no_such_project():
