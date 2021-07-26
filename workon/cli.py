@@ -59,7 +59,6 @@ def _append_done_command(subparsers, parent):
     )
 
 
-
 def _parse_args(user_config):
     parser = argparse.ArgumentParser()
 

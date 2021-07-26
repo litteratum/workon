@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 * `open` command
 
+### Changed
+* `start` command now opens a project if it exists
+
 
 ## [0.2.1] - 2021-06-23
 ### Fixed

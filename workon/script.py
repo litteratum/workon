@@ -106,9 +106,21 @@ def done(args):
 def start(args):
     """Start your work on a project.
 
-    * clones the project from GIT
-    * checks if working directory is empty
+    Opens the project if it already cloned. Otherwise:
+      * clones the project from GIT
+      * checks if working directory is empty
     """
+    if args.project in os.listdir(args.directory):
+        logging.info('The project is already in the working directory')
+        if args.noopen:
+            logging.warning(
+                'The command was executed for existing project with --noopen '
+                'flag. Nothing to do.'
+            )
+        else:
+            _open_project(args.directory, args.project, args.editor)
+        return
+
     logging.info('Setting up "%s"', args.project)
 
     for i, source in enumerate(args.source, start=1):
@@ -124,28 +136,28 @@ def start(args):
             logging.warning('%s. Will try the next source', exc)
 
     if not args.noopen:
-        _open_project(args)
+        _open_project(args.directory, args.project, args.editor)
 
 
-def _open_project(args):
-    project_dir = os.path.join(args.directory, args.project)
+def _open_project(directory, project, editor):
+    project_dir = os.path.join(directory, project)
 
     if not os.path.isdir(project_dir):
         raise ScriptError(
             'No project named "%s" found under your working directory'
-            % args.project
+            % project
         )
 
-    for editor in (args.editor, os.environ.get('EDITOR'), 'vi', 'vim'):
+    for editor in (editor, os.environ.get('EDITOR'), 'vi', 'vim'):
         if editor:
             logging.info(
-                'Trying to open "%s" with "%s" editor', args.project, editor)
+                'Trying to open "%s" with "%s" editor', project, editor)
             try:
                 result = subprocess.run([editor, project_dir], check=False)
             except OSError as exc:
                 logging.error(
                     'Failed to open "%s" with "%s": %s',
-                    args.project, args.editor, exc
+                    project, editor, exc
                 )
             else:
                 if result.returncode == 0:

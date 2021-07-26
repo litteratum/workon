@@ -3,7 +3,7 @@ import os
 import json
 import tempfile
 from argparse import Namespace
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, patch
 
 import pytest
 from workon import script
@@ -196,7 +196,7 @@ def test_done_all_projects_removed_all_files_removed():
 
 
 @patch('workon.script.git.clone')
-def test_start_working_directory_is_not_empty(mc_clone):
+def test_start_working_directory_is_not_empty_project_cloned(mc_clone):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)
         proj_path = os.path.join(tmp_dir_path, 'some')
@@ -256,7 +256,7 @@ def test_start_opens_specified_editor(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
-            project='some', directory=tmp_dir_path, source='some',
+            project='some', directory=tmp_dir_path, source=['some'],
             noopen=False, editor='code'
         )
         script.start(args)
@@ -270,7 +270,7 @@ def test_start_opens_specified_editor(mc_subprocess):
 def test_start_no_open(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         args = Namespace(
-            project='some', directory=tmp_dir_path, source='some',
+            project='some', directory=tmp_dir_path, source=['some'],
             noopen=True
         )
         script.start(args)
@@ -285,7 +285,7 @@ def test_start_no_editor(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
-            project='some', directory=tmp_dir_path, source='some',
+            project='some', directory=tmp_dir_path, source=['some'],
             noopen=False, editor='code'
         )
 
@@ -304,12 +304,26 @@ def test_start_editor_from_env(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         os.mkdir(os.path.join(tmp_dir_path, 'some'))
         args = Namespace(
-            project='some', directory=tmp_dir_path, source='some',
+            project='some', directory=tmp_dir_path, source=['some'],
             noopen=False, editor='code'
         )
 
         script.start(args)
         assert mc_subprocess.run.call_count == 2
+
+
+@patch('workon.script._open_project')
+def test_start_project_exists_should_be_opened(mc_open_project):
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        os.mkdir(os.path.join(tmp_dir_path, 'some'))
+        args = Namespace(
+            project='some', directory=tmp_dir_path, source=['some'],
+            noopen=False, editor='code'
+        )
+        script.start(args)
+        mc_open_project.assert_called_once_with(
+            args.directory, args.project, args.editor
+        )
 
 
 def test_get_config():

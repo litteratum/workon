@@ -20,8 +20,10 @@ When it is time to work on some project, use the `start` command:
 workon start <my_project>
 ```
 
-It will clone "my_project" from the GIT source, save it to the working directory and open the project in the specified
-editor. Please refer to the [Configuration section](#configuration) to know how to configure the script.
+It will first check if the specified project already exists in the working directory, and if yes, the project will be
+opened. Otherwise, it will clone "my_project" from the GIT source, save it to the working directory and open the
+project in the specified editor. Please refer to the [Configuration section](#configuration) to know how to configure
+the script.
 
 See `workon start --help` for other available options on how to control the command.
 
@@ -38,7 +40,7 @@ It will check:
 * unpushed changes
 * leaved stashes
 * unstaged changes
- 
+
 and then remove a project folder from the working directory. If there is something left, the command will fail. But you
 can use `-f/--force` flag if you are confident.
 
@@ -61,8 +63,7 @@ file located under `~/.config/workon/config.json`:
   ]
   ```
 
-  May be overridden by `-s/--source`
-  argument. You can also define multiple sources: `-s first second -s third`
+  May be overridden by `-s/--source` argument. You can also define multiple sources: `-s first second -s third`
 * `dir` - the directory to which projects will be cloned. May be overridden by `-d/--directory` argument. `~` in path
   is supported
 * `editor` - the editor used to open a cloned project. May be overridden by `-e/--editor` argument. If not
