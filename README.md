@@ -69,3 +69,9 @@ file located under `~/.config/workon/config.json`:
 * `editor` - the editor used to open a cloned project. May be overridden by `-e/--editor` argument. If not
   specified and `-e/--editor` argument is not provided, the script will try to use the editor specified by `$EDITOR`
   environment variable. If that variable is not set, the script will try `vi` and `vim` consequently
+
+#### Bash completions
+
+Implemented as a bash script `workon_completions`. Currently, it adds completions only for basic commands.
+To enable completions, simply copy the script to `/etc/bash_completion.d/` or copy it anywhere and source when you
+need.
