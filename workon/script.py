@@ -127,11 +127,14 @@ def start(args):
             _open_project(args.directory, args.project, args.editor)
         return
 
-    logging.info('Setting up "%s"', args.project)
-
     for i, source in enumerate(args.source, start=1):
         project_path = source.strip('/') + '/' + args.project + '.git'
         destination = args.directory + '/{}'.format(args.project)
+
+        logging.info(
+            'Setting up "%s" by cloning it from "%s" into "%s"',
+            args.project, project_path, destination
+        )
 
         try:
             git.clone(project_path, destination)
