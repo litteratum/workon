@@ -17,7 +17,7 @@ clean: clean_coverage
 	py3clean . -v
 
 install:
-	python3 setup.py install --user
+	/usr/bin/python3 -m pip install .
 
 test_req: venv
 	$(VENV_PIP) install pytest pytest-cov

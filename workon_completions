@@ -1,0 +1,14 @@
+#/usr/bin/env bash
+
+_workon_completions()
+{
+  if [ ${#COMP_WORDS[@]} -eq 2 ]
+  then
+    COMPREPLY=($(compgen -W "start done" "${COMP_WORDS[1]}"))
+  elif [ ${#COMP_WORDS[@]} -eq 3 ]
+  then
+    COMPREPLY=($(compgen -d "${COMP_WORDS[2]}"))
+  fi
+}
+
+complete -F _workon_completions workon
