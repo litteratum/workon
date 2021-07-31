@@ -10,9 +10,7 @@ Then this script is for you.
 
 ## Usage
 
-### CLI
-
-#### Start to work on a project
+### Start to work on a project
 
 When it is time to work on some project, use the `start` command:
 
@@ -27,7 +25,7 @@ the script.
 
 See `workon start --help` for other available options on how to control the command.
 
-#### Finish your work with a project
+### Finish your work with a project
 
 When you are done with your work, use `done` command:
 
@@ -44,13 +42,13 @@ It will check:
 and then remove a project folder from the working directory. If there is something left, the command will fail. But you
 can use `-f/--force` flag if you are confident.
 
-If the command ran without arguments, it will remove ALL projects from a working directory.
+If the command ran without arguments, it will try to remove ALL projects from a working directory.
 
 See `workon done --help` for other available options on how to control the command.
 
-### Configuration
+## Configuration
 
-The script's commands can be fully controlled by CLI arguments, but it is much convenient to adjust the configuration
+The script commands can be fully controlled by CLI arguments, but it is much convenient to adjust the configuration
 file located under `~/.config/workon/config.json`:
 
 * `source` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
@@ -70,7 +68,7 @@ file located under `~/.config/workon/config.json`:
   specified and `-e/--editor` argument is not provided, the script will try to use the editor specified by `$EDITOR`
   environment variable. If that variable is not set, the script will try `vi` and `vim` consequently
 
-#### Bash completions
+### Bash completions
 
 Implemented as a bash script `workon_completions`. Currently, it adds completions only for basic commands.
 To enable completions, simply copy the script to `/etc/bash_completion.d/` or copy it anywhere and source when you
