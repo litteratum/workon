@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [1.0.0] - 2021-07-31
+### Added
+* Simple bash completions
+* Better logging for `start` command
+* Small README.md improvements
+
+### Changed
+* Install user config file manually in "setup.py"
+
 ## [0.3.0] - 2021-07-26
 ### Removed
 * `open` command
