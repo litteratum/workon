@@ -1,6 +1,6 @@
 #/usr/bin/env bash
 
-workon_completions()
+_workon_completions()
 {
   if [ ${#COMP_WORDS[@]} -eq 2 ]
   then
@@ -11,4 +11,4 @@ workon_completions()
   fi
 }
 
-complete -F workon_completions workon
+complete -F _workon_completions workon
