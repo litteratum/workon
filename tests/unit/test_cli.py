@@ -5,29 +5,29 @@ import tempfile
 from argparse import Namespace
 
 import pytest
-from workon import cli
-from workon.script import ScriptError
+from git_workon import cli
+from git_workon.script import ScriptError
 
 
 def test_parse_args_no_args():
-    sys.argv = ['workon']
+    sys.argv = ['git_workon']
     with pytest.raises(SystemExit):
         cli.parse_args(user_config={})
 
 
 def test_parse_args_command_no_args():
-    sys.argv = ['workon', 'start', 'my_project']
+    sys.argv = ['git_workon', 'start', 'my_project']
 
     with pytest.raises(ScriptError):
         cli.parse_args(user_config={})
 
-    sys.argv = ['workon', 'done']
+    sys.argv = ['git_workon', 'done']
     with pytest.raises(ScriptError):
         cli.parse_args(user_config={})
 
 
 def test_parse_args_start_command_no_args_config_variables_set():
-    sys.argv = ['workon', 'start', 'my_project']
+    sys.argv = ['git_workon', 'start', 'my_project']
 
     user_config = {
         'dir': '/tmp', 'editor': 'my_editor', 'source': ['some']
@@ -40,7 +40,7 @@ def test_parse_args_start_command_no_args_config_variables_set():
 
 
 def test_parse_args_start_command_source_extended_from_config():
-    sys.argv = ['workon', 'start', 'my_project', '-s', 'some', '-s', 'another']
+    sys.argv = ['git_workon', 'start', 'my_project', '-s', 'some', '-s', 'another']
 
     user_config = {
         'dir': '/tmp', 'editor': 'my_editor', 'source': ['from_config']
@@ -55,7 +55,7 @@ def test_parse_args_start_command_source_extended_from_config():
 
 def test_parse_args_cli_arg_overrides_config_variable():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        sys.argv = ['workon', 'start', 'my_project', '-d', tmp_dir_path, '-vv']
+        sys.argv = ['git_workon', 'start', 'my_project', '-d', tmp_dir_path, '-vv']
 
         user_config = {
             'dir': '/tmp', 'editor': 'code', 'source': ['some']
@@ -72,7 +72,7 @@ def test_directory_does_not_exist_created():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         specified_dir = tmp_dir_path + '/aa'
         sys.argv = [
-            'workon', 'start', 'my_project', '-d', specified_dir, '-vv',
+            'git_workon', 'start', 'my_project', '-d', specified_dir, '-vv',
             '-s', 'some'
         ]
 
@@ -82,7 +82,7 @@ def test_directory_does_not_exist_created():
 
 def test_directory_does_not_exist_failed_to_create():
     sys.argv = [
-        'workon', 'start', 'my_project', '-d', '/a', '-vv'
+        'git_workon', 'start', 'my_project', '-d', '/a', '-vv'
     ]
 
     with pytest.raises(ScriptError):
@@ -93,7 +93,7 @@ def test_directory_exists_permissions_not_sufficient():
     tmp_dir_path = tempfile.mkdtemp()
 
     sys.argv = [
-        'workon', 'start', 'my_project', '-d', tmp_dir_path, '-vv'
+        'git_workon', 'start', 'my_project', '-d', tmp_dir_path, '-vv'
     ]
     os.chmod(tmp_dir_path, 0o000)
 
@@ -102,7 +102,7 @@ def test_directory_exists_permissions_not_sufficient():
 
 
 def test_parse_args_directory_path_expanded():
-    sys.argv = ['workon', 'start', 'my_project']
+    sys.argv = ['git_workon', 'start', 'my_project']
 
     user_config = {
         'dir': '~', 'editor': 'my_editor', 'source': ['some']

@@ -4,7 +4,7 @@ import subprocess
 import sys
 from typing import Iterable
 
-SCRIPT_EXE = os.path.join(sys.prefix, 'bin', 'workon')
+SCRIPT_EXE = os.path.join(sys.prefix, 'bin', 'git_workon')
 
 
 def get_script_output(params: Iterable) -> tuple:

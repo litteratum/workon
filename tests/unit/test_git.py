@@ -8,8 +8,7 @@ from typing import Iterable
 from unittest.mock import patch
 
 import pytest
-from workon import git
-from workon.script import ScriptError
+from git_workon import git
 
 
 class TmpGitDir:
@@ -118,7 +117,7 @@ def test_get_unstaged_info_with_unstaged_returns_info():
         assert '?? 1.txt\n' in info
 
 
-@patch('workon.git.subprocess.run')
+@patch('git_workon.git.subprocess.run')
 def test_clone(mc_subprocess_run):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         mc_subprocess_run.side_effect = lambda *args, **kwargs: os.mkdir(
@@ -128,7 +127,7 @@ def test_clone(mc_subprocess_run):
         assert os.path.exists(os.path.join(tmp_dir_path, 'a'))
 
 
-@patch('workon.git.subprocess.run')
+@patch('git_workon.git.subprocess.run')
 def test_clone_no_such_project(mc_subprocess_run):
     mc_subprocess_run.side_effect = subprocess.CalledProcessError(
         1, [], '', 'not found'
@@ -140,7 +139,7 @@ def test_clone_no_such_project(mc_subprocess_run):
         assert 'not found' in str(exc.value)
 
 
-@patch('workon.git.subprocess.run')
+@patch('git_workon.git.subprocess.run')
 def test_clone_already_exists(mc_subprocess_run):
     mc_subprocess_run.side_effect = subprocess.CalledProcessError(
         1, [], '', 'already exists'

@@ -9,7 +9,7 @@ import subprocess
 from . import git
 
 
-CONFIG_PATH = os.path.expanduser('~/.config/workon/config.json')
+CONFIG_PATH = os.path.expanduser('~/.config/git_workon/config.json')
 
 
 class ScriptError(Exception):

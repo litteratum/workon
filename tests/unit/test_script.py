@@ -6,8 +6,8 @@ from argparse import Namespace
 from unittest.mock import Mock, patch
 
 import pytest
-from workon import script
-from workon.script import ScriptError
+from git_workon import script
+from git_workon.script import ScriptError
 
 
 def test_done_no_such_project():
@@ -20,11 +20,7 @@ def test_done_no_such_project():
 
 @pytest.mark.parametrize('specific', [(True, False)])
 def test_done_nonexistent_dir(specific):
-    if specific:
-        project = 'dummy'
-    else:
-        project = None
-
+    project = 'dummy' if specific else None
     args = Namespace(project=project, directory='ehehe')
 
     with pytest.raises(ScriptError):
@@ -62,7 +58,7 @@ def test_done_all_filetypes_removed():
         assert not os.listdir(tmp_dir_path)
 
 
-@patch('workon.script.git.get_stash_info', Mock(return_value='stash'))
+@patch('git_workon.script.git.get_stash_info', Mock(return_value='stash'))
 def test_done_project_found_git_stashed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -76,7 +72,7 @@ def test_done_project_found_git_stashed_error_raised():
         assert os.path.exists(proj_path)
 
 
-@patch('workon.script.git.get_stash_info', Mock(return_value='stash'))
+@patch('git_workon.script.git.get_stash_info', Mock(return_value='stash'))
 def test_done_project_found_git_stashed_forced_ok():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -90,7 +86,7 @@ def test_done_project_found_git_stashed_forced_ok():
 
 
 @patch(
-    'workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
+    'git_workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
 )
 def test_done_project_found_git_unpushed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -107,7 +103,7 @@ def test_done_project_found_git_unpushed_error_raised():
 
 
 @patch(
-    'workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
+    'git_workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
 )
 def test_done_project_found_git_unpushed_forced_ok():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -122,7 +118,7 @@ def test_done_project_found_git_unpushed_forced_ok():
 
 
 @patch(
-    'workon.script.git.get_unstaged_info', Mock(return_value='oops')
+    'git_workon.script.git.get_unstaged_info', Mock(return_value='oops')
 )
 def test_done_project_found_git_unstaged():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -139,7 +135,7 @@ def test_done_project_found_git_unstaged():
 
 
 @patch(
-    'workon.script.git.get_unstaged_info', Mock(return_value='oops')
+    'git_workon.script.git.get_unstaged_info', Mock(return_value='oops')
 )
 def test_done_project_found_git_unstaged_forced_ok():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -164,7 +160,7 @@ def test_done_all_projects_removed():
         assert len(os.listdir(tmp_dir_path)) == 0
 
 
-@patch('workon.script.git.get_stash_info')
+@patch('git_workon.script.git.get_stash_info')
 def test_done_all_projects_couple_are_dirty_but_all_tried_to_be_removed(
         mc_get_stash_info):
     mc_get_stash_info.side_effect = (
@@ -195,7 +191,7 @@ def test_done_all_projects_removed_all_files_removed():
         assert len(os.listdir(tmp_dir_path)) == 0
 
 
-@patch('workon.script.git.clone')
+@patch('git_workon.script.git.clone')
 def test_start_working_directory_is_not_empty_project_cloned(mc_clone):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)
@@ -211,7 +207,7 @@ def test_start_working_directory_is_not_empty_project_cloned(mc_clone):
         assert os.path.isdir(proj_path)
 
 
-@patch('workon.script.git.clone')
+@patch('git_workon.script.git.clone')
 def test_start_no_such_project(mc_clone):
     mc_clone.side_effect = ScriptError
 
@@ -233,7 +229,7 @@ def test_start_no_such_project(mc_clone):
     ('git@github.com:user/', 'git@github.com:user/some.git'),
     ('git@github.com:user//', 'git@github.com:user/some.git'),
 ])
-@patch('workon.script.git.clone')
+@patch('git_workon.script.git.clone')
 def test_start_cloned(mc_clone, source, expected_source):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = os.path.join(tmp_dir_path, 'some')
@@ -248,8 +244,8 @@ def test_start_cloned(mc_clone, source, expected_source):
         mc_clone.assert_called_once_with(expected_source, proj_path)
 
 
-@patch('workon.script.git.clone', Mock())
-@patch('workon.script.subprocess')
+@patch('git_workon.script.git.clone', Mock())
+@patch('git_workon.script.subprocess')
 def test_start_opens_specified_editor(mc_subprocess):
     mc_subprocess.run.return_value = Mock(returncode=0)
 
@@ -265,8 +261,8 @@ def test_start_opens_specified_editor(mc_subprocess):
         )
 
 
-@patch('workon.script.git.clone', Mock())
-@patch('workon.script.subprocess')
+@patch('git_workon.script.git.clone', Mock())
+@patch('git_workon.script.subprocess')
 def test_start_no_open(mc_subprocess):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         args = Namespace(
@@ -277,8 +273,8 @@ def test_start_no_open(mc_subprocess):
         assert mc_subprocess.run.call_count == 0
 
 
-@patch('workon.script.git.clone', Mock())
-@patch('workon.script.subprocess')
+@patch('git_workon.script.git.clone', Mock())
+@patch('git_workon.script.subprocess')
 def test_start_no_editor(mc_subprocess):
     mc_subprocess.run.return_value = Mock(returncode=1)
 
@@ -296,8 +292,8 @@ def test_start_no_editor(mc_subprocess):
         assert mc_subprocess.run.call_count == 4
 
 
-@patch('workon.script.git.clone', Mock())
-@patch('workon.script.subprocess')
+@patch('git_workon.script.git.clone', Mock())
+@patch('git_workon.script.subprocess')
 def test_start_editor_from_env(mc_subprocess):
     mc_subprocess.run.side_effect = (Mock(returncode=1), Mock(returncode=0))
 
@@ -312,7 +308,7 @@ def test_start_editor_from_env(mc_subprocess):
         assert mc_subprocess.run.call_count == 2
 
 
-@patch('workon.script._open_project')
+@patch('git_workon.script._open_project')
 def test_start_project_exists_should_be_opened(mc_open_project):
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         os.mkdir(os.path.join(tmp_dir_path, 'some'))
@@ -332,12 +328,12 @@ def test_get_config():
         json.dump(config, file)
         file.flush()
 
-        with patch('workon.script.CONFIG_PATH', file.name):
+        with patch('git_workon.script.CONFIG_PATH', file.name):
             assert script.get_config() == config
 
 
 def test_get_config_no_config_file():
-    with patch('workon.script.CONFIG_PATH', 'nonexistent'):
+    with patch('git_workon.script.CONFIG_PATH', 'nonexistent'):
         assert script.get_config() == {}
 
 
@@ -346,7 +342,7 @@ def test_get_config_wrong_json_file():
         file.write('oops')
         file.flush()
 
-        with patch('workon.script.CONFIG_PATH', file.name):
+        with patch('git_workon.script.CONFIG_PATH', file.name):
             assert script.get_config() == {}
 
 
@@ -366,6 +362,6 @@ def test_get_config_invalid_config(whats_wrong):
         json.dump(config, file)
         file.flush()
 
-        with patch('workon.script.CONFIG_PATH', file.name):
+        with patch('git_workon.script.CONFIG_PATH', file.name):
             with pytest.raises(ScriptError):
                 script.get_config()

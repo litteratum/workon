@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 
 
-USER_CONFIG_PATH = os.path.expanduser('~/.config/workon/config.json')
+USER_CONFIG_PATH = os.path.expanduser('~/.config/git_workon/config.json')
 os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
 
 
@@ -18,13 +18,13 @@ class LocalInstall(install):
 
 
 setup(
-    name='workon',
-    version='1.0.0',
+    name='git_workon',
+    version='1.1.0',
     author='Andrey Nechaev',
     author_email='andrewnech@gmail.com',
     packages=find_packages(exclude=('tests.*', 'tests')),
     entry_points={
-        'console_scripts': ['workon = workon.main:main']
+        'console_scripts': ['git_workon = git_workon.main:main']
     },
     cmdclass={
         'install': LocalInstall,

@@ -32,4 +32,4 @@ test_all: test_req
 	$(VENV)/bin/pytest -svvv tests
 
 coverage: test_req
-	pytest --cov-report html --cov=workon tests/
+	pytest --cov-report html --cov=git_workon tests/
