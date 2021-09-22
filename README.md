@@ -15,7 +15,7 @@ Then this script is for you.
 When it is time to work on some project, use the `start` command:
 
 ```bash
-workon start <my_project>
+git_workon start <my_project>
 ```
 
 It will first check if the specified project already exists in the working directory, and if yes, the project will be
@@ -23,14 +23,14 @@ opened. Otherwise, it will clone "my_project" from the GIT source, save it to th
 project in the specified editor. Please refer to the [Configuration section](#configuration) to know how to configure
 the script.
 
-See `workon start --help` for other available options on how to control the command.
+See `git_workon start --help` for other available options on how to control the command.
 
 ### Finish your work with a project
 
 When you are done with your work, use `done` command:
 
 ```bash
-workon done [<my_project>]
+git_workon done [<my_project>]
 ```
 
 It will check:
@@ -44,16 +44,16 @@ can use `-f/--force` flag if you are confident.
 
 If the command ran without arguments, it will try to remove ALL projects from a working directory.
 
-See `workon done --help` for other available options on how to control the command.
+See `git_workon done --help` for other available options on how to control the command.
 
 ## Configuration
 
 The script commands can be fully controlled by CLI arguments, but it is much convenient to adjust the configuration
-file located under `~/.config/workon/config.json`:
+file located under `~/.config/git_workon/config.json`:
 
 * `source` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
   Example:
-  
+
   ```json
   "source": [
     "https://github.com/<my_username>",

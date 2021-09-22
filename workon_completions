@@ -11,4 +11,4 @@ _workon_completions()
   fi
 }
 
-complete -F _workon_completions workon
+complete -F _workon_completions git_workon
