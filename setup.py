@@ -19,7 +19,7 @@ class LocalInstall(install):
 
 setup(
     name='git_workon',
-    version='1.1.0',
+    version='1.1.1',
     author='Andrey Nechaev',
     author_email='andrewnech@gmail.com',
     packages=find_packages(exclude=('tests.*', 'tests')),
