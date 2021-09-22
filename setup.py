@@ -6,12 +6,12 @@ from setuptools.command.install import install
 
 
 USER_CONFIG_PATH = os.path.expanduser('~/.config/git_workon/config.json')
-os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
 
 
 class LocalInstall(install):
 
     def run(self):
+        os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
         if not os.path.exists(USER_CONFIG_PATH):
             shutil.copy('config.json', USER_CONFIG_PATH)
         install.run(self)
