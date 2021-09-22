@@ -6,12 +6,12 @@ from setuptools.command.install import install
 
 
 USER_CONFIG_PATH = os.path.expanduser('~/.config/git_workon/config.json')
-os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
 
 
 class LocalInstall(install):
 
     def run(self):
+        os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
         if not os.path.exists(USER_CONFIG_PATH):
             shutil.copy('config.json', USER_CONFIG_PATH)
         install.run(self)
@@ -19,7 +19,7 @@ class LocalInstall(install):
 
 setup(
     name='git_workon',
-    version='1.1.0',
+    version='1.1.1',
     author='Andrey Nechaev',
     author_email='andrewnech@gmail.com',
     packages=find_packages(exclude=('tests.*', 'tests')),
