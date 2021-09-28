@@ -1,7 +1,8 @@
 *.egg-info
-venv
+/venv
 **/__pycache__
-build
+/build
+/_build
 dist
 
 # tests coverage
