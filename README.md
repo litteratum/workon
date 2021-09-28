@@ -2,11 +2,19 @@
 
 Do you often need to clone some project, solve one task and remove it from your filesystem?
 
-Do you often afraid that you might leave something unpushed or stashed?
+Are you often afraid that you might leave something unpushed or stashed?
 
 Do you like to leave a perfectly clean desk after your work is done?
 
 Then this script is for you.
+
+## Installation
+
+The package is available on `PyPi` and can be installed with `pip`:
+
+```bash
+pip install git-workon
+```
 
 ## Usage
 
@@ -18,10 +26,9 @@ When it is time to work on some project, use the `start` command:
 git_workon start <my_project>
 ```
 
-It will first check if the specified project already exists in the working directory, and if yes, the project will be
-opened. Otherwise, it will clone "my_project" from the GIT source, save it to the working directory and open the
-project in the specified editor. Please refer to the [Configuration section](#configuration) to know how to configure
-the script.
+This command will open the project if it already exist in the working directory, otherwise, it will clone "my_project"
+from a GIT source, save it to the working directory and open it in the specified editor.
+Please refer to the [Configuration section](#configuration) to know how to configure the script.
 
 See `git_workon start --help` for other available options on how to control the command.
 
@@ -36,13 +43,13 @@ git_workon done [<my_project>]
 It will check:
 
 * unpushed changes
-* leaved stashes
+* left stashes
 * unstaged changes
 
-and then remove a project folder from the working directory. If there is something left, the command will fail. But you
-can use `-f/--force` flag if you are confident.
+and then remove the project folder from the working directory. If there is something left, the command will fail. But
+you can use `-f/--force` flag if you are confident.
 
-If the command ran without arguments, it will try to remove ALL projects from a working directory.
+If the command run without arguments, it will try to remove ALL projects from a working directory.
 
 See `git_workon done --help` for other available options on how to control the command.
 
