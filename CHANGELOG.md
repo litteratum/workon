@@ -6,12 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [1.1.2] - 2021-09-28
+### Added
+* Package meta
+* Improved documentation
+* Improved packaging
 
 ## [1.1.1] - 2021-09-22
 ### Fixed
 * Add setup.cfg and include `config.json` into distribution
 * Remove user config creation from the top level of `setup.py`
-
 
 ## [1.1.0] - 2021-09-22
 ### Changed
