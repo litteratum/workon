@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [1.2.1] - 2021-09-29
+### Fixed
+* Log appropriate error when clone fails for all configured sources
+* `done` command: check `force` first to speedup execution (if `force` is True, there is no need to check for unpushed
+  entities)
+
 ## [1.2.0] - 2021-09-29
 ### Changed
 * `done` command now shows ALL not pushed entities
