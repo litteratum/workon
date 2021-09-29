@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Changed
 * `done` command now shows ALL not pushed entities
+* `start` command: log clone errors only in verbose mode
 
 ### Added
 * `done` command now shows information about unpushed tags

@@ -129,7 +129,7 @@ def start(args):
         destination = args.directory + '/{}'.format(args.project)
 
         logging.info(
-            'Setting up "%s" by cloning it from "%s" into "%s"',
+            'Cloning "%s" from "%s" into "%s"',
             args.project, project_path, destination
         )
 
@@ -139,7 +139,7 @@ def start(args):
         except git.GITError as exc:
             if i == len(args.source):
                 raise
-            logging.warning('%s. Will try the next source', exc)
+            logging.debug(exc)
 
     if not args.noopen:
         _open_project(args.directory, args.project, args.editor)
