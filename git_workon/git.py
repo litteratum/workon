@@ -37,6 +37,22 @@ def get_unstaged_info(directory) -> str:
     ).stdout
 
 
+def get_unpushed_tags(directory) -> str:
+    """Return unpushed tags.
+
+    If no tags found, return an empty string.
+    """
+    logging.debug('Checking for unpushed tags under "%s"', directory)
+    info = subprocess.run(
+        'git push --tags --dry-run'.split(),
+        cwd=directory, capture_output=True, text=True, check=False
+    ).stderr
+
+    if 'new tag' not in info:
+        return ''
+    return info
+
+
 def clone(source, destination):
     """Clone a project from GIT `source` to `destination` directory."""
     try:

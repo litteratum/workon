@@ -23,12 +23,16 @@ pip install git-workon
 When it is time to work on some project, use the `start` command:
 
 ```bash
-git_workon start <my_project>
+git_workon start <my_project> [options]
 ```
 
-This command will open the project if it already exist in the working directory, otherwise, it will clone "my_project"
-from a GIT source, save it to the working directory and open it in the specified editor.
-Please refer to the [Configuration section](#configuration) to know how to configure the script.
+This command will:
+
+* If the project with a given name already exists in the working directory:
+  * opens it with a configured editor
+* If the project with a given name does not exist:
+  * clone it from git sources into the working directory
+  * open the project with a configured editor
 
 See `git_workon start --help` for other available options on how to control the command.
 
@@ -37,19 +41,22 @@ See `git_workon start --help` for other available options on how to control the 
 When you are done with your work, use `done` command:
 
 ```bash
-git_workon done [<my_project>]
+git_workon done [<my_project>] [options]
 ```
 
-It will check:
+This command will:
 
-* unpushed changes
-* left stashes
-* unstaged changes
+* Check for left stashes
+* Check for unpushed commits
+* Check for left unstaged changes
+* Check for unpushed tags
+* If anything from above was not pushed:
+  * fail with an error describing what was left unpushed
+* If everything was pushed:
+  * remove a project from the working directory
 
-and then remove the project folder from the working directory. If there is something left, the command will fail. But
-you can use `-f/--force` flag if you are confident.
-
-If the command run without arguments, it will try to remove ALL projects from a working directory.
+If a project name was not passed, the command will try to remove everything from the working directory (still,
+folders containing ".git" will be checked for unpushed entities).
 
 See `git_workon done --help` for other available options on how to control the command.
 
@@ -69,11 +76,24 @@ file located under `~/.config/git_workon/config.json`:
   ```
 
   May be overridden by `-s/--source` argument. You can also define multiple sources: `-s first second -s third`
-* `dir` - the directory to which projects will be cloned. May be overridden by `-d/--directory` argument. `~` in path
-  is supported
+* `dir` - the working directory. All projects will be cloned to this directory. May be overridden by `-d/--directory`
+  argument. `~` in path is supported
 * `editor` - the editor used to open a cloned project. May be overridden by `-e/--editor` argument. If not
   specified and `-e/--editor` argument is not provided, the script will try to use the editor specified by `$EDITOR`
   environment variable. If that variable is not set, the script will try `vi` and `vim` consequently
+
+Configuration example:
+
+```json
+{
+  "dir": "~/_workon",
+  "editor": "vim",
+  "source": [
+    "https://github.com/pallets",
+    "https://github.com/pypa"
+  ]
+}
+```
 
 ### Bash completions
 

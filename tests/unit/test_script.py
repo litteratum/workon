@@ -41,7 +41,7 @@ def test_done_project_found_and_removed():
 def test_done_all_filetypes_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         # project dir
-        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkdtemp(dir=tmp_dir_path)
         # regular file
         tempfile.mktemp(dir=tmp_dir_path)
         # symlink
@@ -86,7 +86,8 @@ def test_done_project_found_git_stashed_forced_ok():
 
 
 @patch(
-    'git_workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
+    'git_workon.script.git.get_unpushed_branches_info', Mock(
+        return_value='oops')
 )
 def test_done_project_found_git_unpushed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -103,7 +104,8 @@ def test_done_project_found_git_unpushed_error_raised():
 
 
 @patch(
-    'git_workon.script.git.get_unpushed_branches_info', Mock(return_value='oops')
+    'git_workon.script.git.get_unpushed_branches_info', Mock(
+        return_value='oops')
 )
 def test_done_project_found_git_unpushed_forced_ok():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
@@ -149,10 +151,45 @@ def test_done_project_found_git_unstaged_forced_ok():
         assert not os.path.exists(proj_path)
 
 
+@patch('git_workon.script.git.get_stash_info')
+@patch('git_workon.script.git.get_unpushed_branches_info')
+@patch('git_workon.script.git.get_unstaged_info')
+@patch('git_workon.script.git.get_unpushed_tags')
+def test_done_project_found_all_unpushed(
+        mc_tags, mc_unstaged, mc_unpushed, mc_stashed):
+    unstaged = 'M somefile.txt'
+    unpushed = 'hash (branch1) message'
+    stashed = 'stash1\nstash2'
+    tags = (
+        'To github.com:user/proj.git\n* [new tag]         1.1.0 -> 1.1.0\n'
+        '* [new tag]         1.2 -> 1.2'
+    )
+
+    mc_unstaged.return_value = unstaged
+    mc_unpushed.return_value = unpushed
+    mc_stashed.return_value = stashed
+    mc_tags.return_value = tags
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+
+        args = Namespace(
+            project=os.path.basename(proj_path), directory=tmp_dir_path,
+            force=False
+        )
+        with pytest.raises(ScriptError) as exc:
+            script.done(args)
+
+        for message in (unstaged, unpushed, stashed, tags,):
+            assert message in str(exc.value)
+        assert os.path.exists(proj_path)
+
+
 def test_done_all_projects_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)
         tempfile.mkdtemp(dir=tmp_dir_path)
+        tempfile.mkstemp(dir=tmp_dir_path)
 
         args = Namespace(directory=tmp_dir_path, project=None, force=False)
         script.done(args)
@@ -177,18 +214,6 @@ def test_done_all_projects_couple_are_dirty_but_all_tried_to_be_removed(
         script.done(args)
 
         assert len(os.listdir(tmp_dir_path)) == 2
-
-
-def test_done_all_projects_removed_all_files_removed():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        tempfile.mkdtemp(dir=tmp_dir_path)
-        tempfile.mkdtemp(dir=tmp_dir_path)
-        tempfile.mkstemp(dir=tmp_dir_path)
-
-        args = Namespace(directory=tmp_dir_path, project=None, force=False)
-        script.done(args)
-
-        assert len(os.listdir(tmp_dir_path)) == 0
 
 
 @patch('git_workon.script.git.clone')
@@ -351,12 +376,8 @@ def test_get_config_wrong_json_file():
 ])
 def test_get_config_invalid_config(whats_wrong):
     config = {
-        'dir': 'some',
-        'source': ['some', ],
-        'editor': 'some'
+        'dir': 'some', 'source': ['some'], 'editor': 'some', whats_wrong: 1
     }
-
-    config[whats_wrong] = 1
 
     with tempfile.NamedTemporaryFile('w+') as file:
         json.dump(config, file)

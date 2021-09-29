@@ -5,7 +5,7 @@ import shutil
 import subprocess
 import tempfile
 from typing import Iterable
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 from git_workon import git
@@ -115,6 +115,29 @@ def test_get_unstaged_info_with_unstaged_returns_info():
 
         info = git.get_unstaged_info(git_dir.path)
         assert '?? 1.txt\n' in info
+
+
+def test_get_unpushed_tags_not_a_git_repo():
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        assert git.get_unpushed_tags(tmp_dir_path) == ''
+
+
+def test_get_unpushed_tags_no_remote_returns_empty_str():
+    with TmpGitDir() as git_dir:
+        assert git.get_unpushed_tags(git_dir.path) == ''
+
+
+@patch('git_workon.git.subprocess.run')
+def test_get_unpushed_tags_with_unpushed_returns_info(mc_run):
+    mc_run.return_value = Mock(stderr='* [new tag]         1.1.0 -> 1.1.0')
+    info = git.get_unpushed_tags('')
+    assert '1.1.0 -> 1.1.0' in info
+
+
+@patch('git_workon.git.subprocess.run')
+def test_get_unpushed_tags_no_unpushed_returns_empty_str(mc_run):
+    mc_run.return_value = Mock(stderr='Everything up-to-date')
+    assert git.get_unpushed_tags('') == ''
 
 
 @patch('git_workon.git.subprocess.run')

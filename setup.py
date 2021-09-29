@@ -23,7 +23,7 @@ class LocalInstall(install):
 
 setup(
     name='git_workon',
-    version='1.1.2',
+    version='1.2.0',
     author='Andrey Nechaev',
     author_email='andrewnech@gmail.com',
     description='Utility that automates projects clone/remove and checks for nonpushed changes on removal',
@@ -42,7 +42,7 @@ setup(
         'Topic :: Utilities',
     ],
     entry_points={
-        'console_scripts': ['git_workon = git_workon.main:main']
+        'console_scripts': ['gw = git_workon.main:main']
     },
     data_files=[
         ('', ['config.json',]),

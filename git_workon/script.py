@@ -50,32 +50,29 @@ def _remove_project(project, directory, force):
     logging.info('Finishing up "%s"', project)
     proj_path = os.path.join(directory, project)
 
-    stashes_info = git.get_stash_info(proj_path)
-    if stashes_info and not force:
-        raise ScriptError(
-            'There are stashes left for "%s"! Please, take a look:'
-            '\n%s\nIf you are confident, use "-f" flag'
-            % (project, stashes_info)
-        )
+    stashed = git.get_stash_info(proj_path)
+    unpushed = git.get_unpushed_branches_info(proj_path)
+    unstaged = git.get_unstaged_info(proj_path)
+    tags = git.get_unpushed_tags(proj_path)
 
-    unpushed_info = git.get_unpushed_branches_info(proj_path)
-    if unpushed_info and not force:
-        raise ScriptError(
-            'There are unpushed commits left for "%s"! Please, '
-            'take a look:\n%s\nIf you are confident, use "-f" flag'
-            % (project, unpushed_info)
-        )
+    if not any([stashed, unpushed, unstaged, tags, ]) or force:
+        logging.debug('Removing "%s"', proj_path)
+        shutil.rmtree(proj_path)
+        return
 
-    unstaged_changes = git.get_unstaged_info(proj_path)
-    if unstaged_changes and not force:
-        raise ScriptError(
-            'There are unstaged changes left for "%s"! Please, '
-            'take a look:\n%s\nIf you are confident, use "-f" flag'
-            % (project, unstaged_changes)
-        )
+    output = 'Failed. There are some unpushed changes! See below\n'
+    if stashed:
+        output += f'\nStashes:\n{stashed}'
+    if unpushed:
+        output += f'\nCommits:\n{unpushed}'
+    if unstaged:
+        output += f'\nNot staged:\n{unstaged}'
+    if tags:
+        output += f'\nTags:\n{tags}'
 
-    logging.debug('Removing "%s"', proj_path)
-    shutil.rmtree(proj_path)
+    output += '\nPush your local changes or use "-f" flag to drop them'
+
+    raise ScriptError(output)
 
 
 def done(args):
@@ -132,7 +129,7 @@ def start(args):
         destination = args.directory + '/{}'.format(args.project)
 
         logging.info(
-            'Setting up "%s" by cloning it from "%s" into "%s"',
+            'Cloning "%s" from "%s" into "%s"',
             args.project, project_path, destination
         )
 
@@ -142,7 +139,7 @@ def start(args):
         except git.GITError as exc:
             if i == len(args.source):
                 raise
-            logging.warning('%s. Will try the next source', exc)
+            logging.debug(exc)
 
     if not args.noopen:
         _open_project(args.directory, args.project, args.editor)
