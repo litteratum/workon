@@ -154,14 +154,21 @@ def test_done_project_found_git_unstaged_forced_ok():
 @patch('git_workon.script.git.get_stash_info')
 @patch('git_workon.script.git.get_unpushed_branches_info')
 @patch('git_workon.script.git.get_unstaged_info')
-def test_done_project_found_all_unpushed(mc_unstaged, mc_unpushed, mc_stashed):
+@patch('git_workon.script.git.get_unpushed_tags')
+def test_done_project_found_all_unpushed(
+        mc_tags, mc_unstaged, mc_unpushed, mc_stashed):
     unstaged = 'M somefile.txt'
     unpushed = 'hash (branch1) message'
     stashed = 'stash1\nstash2'
+    tags = (
+        'To github.com:user/proj.git\n* [new tag]         1.1.0 -> 1.1.0\n'
+        '* [new tag]         1.2 -> 1.2'
+    )
 
     mc_unstaged.return_value = unstaged
     mc_unpushed.return_value = unpushed
     mc_stashed.return_value = stashed
+    mc_tags.return_value = tags
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -173,7 +180,7 @@ def test_done_project_found_all_unpushed(mc_unstaged, mc_unpushed, mc_stashed):
         with pytest.raises(ScriptError) as exc:
             script.done(args)
 
-        for message in (unstaged, unpushed, stashed,):
+        for message in (unstaged, unpushed, stashed, tags,):
             assert message in str(exc.value)
         assert os.path.exists(proj_path)
 

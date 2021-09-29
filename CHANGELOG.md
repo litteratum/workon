@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * `done` command now shows ALL not pushed entities
 
+### Added
+* `done` command now shows information about unpushed tags
+
 
 ## [1.1.2] - 2021-09-28
 ### Added

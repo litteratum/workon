@@ -53,8 +53,9 @@ def _remove_project(project, directory, force):
     stashed = git.get_stash_info(proj_path)
     unpushed = git.get_unpushed_branches_info(proj_path)
     unstaged = git.get_unstaged_info(proj_path)
+    tags = git.get_unpushed_tags(proj_path)
 
-    if not any([stashed, unpushed, unstaged, ]) or force:
+    if not any([stashed, unpushed, unstaged, tags, ]) or force:
         logging.debug('Removing "%s"', proj_path)
         shutil.rmtree(proj_path)
         return
@@ -66,6 +67,8 @@ def _remove_project(project, directory, force):
         output += f'\nCommits:\n{unpushed}'
     if unstaged:
         output += f'\nNot staged:\n{unstaged}'
+    if tags:
+        output += f'\nTags:\n{tags}'
 
     output += '\nPush your local changes or use "-f" flag to drop them'
 
