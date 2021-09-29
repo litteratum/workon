@@ -42,7 +42,7 @@ setup(
         'Topic :: Utilities',
     ],
     entry_points={
-        'console_scripts': ['git_workon = git_workon.main:main']
+        'console_scripts': ['gw = git_workon.main:main']
     },
     data_files=[
         ('', ['config.json',]),

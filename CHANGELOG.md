@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * `done` command now shows ALL not pushed entities
 * `start` command: log clone errors only in verbose mode
+* Console script was renamed: `git_workon` -> `gw`
 
 ### Added
 * `done` command now shows information about unpushed tags
