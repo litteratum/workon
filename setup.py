@@ -23,7 +23,7 @@ class LocalInstall(install):
 
 setup(
     name='git_workon',
-    version='1.1.2',
+    version='1.2.0',
     author='Andrey Nechaev',
     author_email='andrewnech@gmail.com',
     description='Utility that automates projects clone/remove and checks for nonpushed changes on removal',
