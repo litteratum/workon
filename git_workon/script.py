@@ -55,7 +55,7 @@ def _remove_project(project, directory, force):
     unstaged = git.get_unstaged_info(proj_path)
     tags = git.get_unpushed_tags(proj_path)
 
-    if not any([stashed, unpushed, unstaged, tags, ]) or force:
+    if force or not any([stashed, unpushed, unstaged, tags, ]):
         logging.debug('Removing "%s"', proj_path)
         shutil.rmtree(proj_path)
         return
@@ -138,7 +138,10 @@ def start(args):
             break
         except git.GITError as exc:
             if i == len(args.source):
-                raise
+                raise ScriptError(
+                    f'Failed to clone "{args.project}". Tried all configured '
+                    'sources'
+                )
             logging.debug(exc)
 
     if not args.noopen:
