@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [1.2.2] - 2021-09-30
+### Fixed
+* Adjust for git_workon -> gw update (completions and README.md)
+
+
 ## [1.2.1] - 2021-09-29
 ### Fixed
 * Log appropriate error when clone fails for all configured sources

@@ -23,7 +23,7 @@ pip install git-workon
 When it is time to work on some project, use the `start` command:
 
 ```bash
-git_workon start <my_project> [options]
+gw start <my_project> [options]
 ```
 
 This command will:
@@ -34,14 +34,14 @@ This command will:
   * clone it from git sources into the working directory
   * open the project with a configured editor
 
-See `git_workon start --help` for other available options on how to control the command.
+See `gw start --help` for other available options on how to control the command.
 
 ### Finish your work with a project
 
 When you are done with your work, use `done` command:
 
 ```bash
-git_workon done [<my_project>] [options]
+gw done [<my_project>] [options]
 ```
 
 This command will:
@@ -58,7 +58,7 @@ This command will:
 If a project name was not passed, the command will try to remove everything from the working directory (still,
 folders containing ".git" will be checked for unpushed entities).
 
-See `git_workon done --help` for other available options on how to control the command.
+See `gw done --help` for other available options on how to control the command.
 
 ## Configuration
 
