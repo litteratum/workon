@@ -36,15 +36,9 @@ test_req: venv
 	$(VENV_PIP) install pytest pytest-cov
 
 test: test_req
-	$(VENV)/bin/pytest -svvv tests/unit
-
-test_integration: test_req
-	$(VENV)/bin/pytest -svvv tests/integration
-
-test_all: test_req
 	$(VENV)/bin/pytest -svvv tests
 
 coverage: test_req
-	pytest --cov-report html --cov=git_workon tests/
+	$(VENV)/bin/pytest --cov-report html --cov=git_workon tests/
 
-.PHONY: clean_coverage clean test_req test test_integration test_all coverage build publish
+.PHONY: clean_coverage clean test_req test coverage build publish
