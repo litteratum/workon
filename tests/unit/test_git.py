@@ -119,12 +119,16 @@ def test_get_unstaged_info_with_unstaged_returns_info():
 
 def test_get_unpushed_tags_not_a_git_repo():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        assert git.get_unpushed_tags(tmp_dir_path) == ''
+        assert 'Failed to check unpushed tags' in git.get_unpushed_tags(
+            tmp_dir_path
+        )
 
 
 def test_get_unpushed_tags_no_remote_returns_empty_str():
     with TmpGitDir() as git_dir:
-        assert git.get_unpushed_tags(git_dir.path) == ''
+        assert 'Failed to check unpushed tags' in git.get_unpushed_tags(
+            git_dir.path
+        )
 
 
 @patch('git_workon.git.subprocess.run')

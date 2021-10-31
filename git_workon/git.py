@@ -7,7 +7,7 @@ class GITError(Exception):
     """Any error related with GIT usage."""
 
 
-def get_stash_info(directory):
+def get_stash_info(directory: str):
     """Return stash info under `directory`."""
     logging.debug('Checking GIT stashes under "%s"', directory)
     return subprocess.run(
@@ -16,7 +16,7 @@ def get_stash_info(directory):
     ).stdout
 
 
-def get_unpushed_branches_info(directory) -> str:
+def get_unpushed_branches_info(directory: str) -> str:
     """Return information about unpushed branches.
 
     Format is: <commit> (<branch>) <commit_message>
@@ -28,7 +28,7 @@ def get_unpushed_branches_info(directory) -> str:
     ).stdout
 
 
-def get_unstaged_info(directory) -> str:
+def get_unstaged_info(directory: str) -> str:
     """Return information about unstaged changes."""
     logging.debug('Checking for unstaged changes under "%s"', directory)
     return subprocess.run(
@@ -37,23 +37,29 @@ def get_unstaged_info(directory) -> str:
     ).stdout
 
 
-def get_unpushed_tags(directory) -> str:
+def get_unpushed_tags(directory: str) -> str:
     """Return unpushed tags.
 
-    If no tags found, return an empty string.
+    If no tags found, returns an empty string.
+    If failed to get tags information, returns a string containing error
+    description.
     """
     logging.debug('Checking for unpushed tags under "%s"', directory)
-    info = subprocess.run(
-        'git push --tags --dry-run'.split(),
-        cwd=directory, capture_output=True, text=True, check=False
-    ).stderr
+
+    try:
+        info = subprocess.run(
+            'git push --tags --dry-run'.split(),
+            cwd=directory, capture_output=True, text=True, check=True
+        ).stderr
+    except subprocess.CalledProcessError as exc:
+        return 'Failed to check unpushed tags: {}'.format(exc.stderr)
 
     if 'new tag' not in info:
         return ''
     return info
 
 
-def clone(source, destination):
+def clone(source: str, destination: str):
     """Clone a project from GIT `source` to `destination` directory."""
     try:
         logging.debug('Cloning "%s" to "%s"', source, destination)
