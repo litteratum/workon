@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [1.2.3] - 2021-10-31
+### Fixed
+* A project(s) now is/are not removed if the check for unpushed git tags fails
+
+
 ## [1.2.2] - 2021-09-30
 ### Fixed
 * Adjust for git_workon -> gw update (completions and README.md)

@@ -27,6 +27,7 @@ def test_done_nonexistent_dir(specific):
         script.done(args)
 
 
+@patch('git_workon.script.git.get_unpushed_tags', Mock(return_value=''))
 def test_done_project_found_and_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -38,6 +39,7 @@ def test_done_project_found_and_removed():
         assert not os.path.exists(proj_path)
 
 
+@patch('git_workon.script.git.get_unpushed_tags', Mock(return_value=''))
 def test_done_all_filetypes_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         # project dir
@@ -185,6 +187,7 @@ def test_done_project_found_all_unpushed(
         assert os.path.exists(proj_path)
 
 
+@patch('git_workon.script.git.get_unpushed_tags', Mock(return_value=''))
 def test_done_all_projects_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         tempfile.mkdtemp(dir=tmp_dir_path)
@@ -198,6 +201,7 @@ def test_done_all_projects_removed():
 
 
 @patch('git_workon.script.git.get_stash_info')
+@patch('git_workon.script.git.get_unpushed_tags', Mock(return_value=''))
 def test_done_all_projects_couple_are_dirty_but_all_tried_to_be_removed(
         mc_get_stash_info):
     mc_get_stash_info.side_effect = (

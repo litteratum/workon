@@ -60,7 +60,7 @@ def _remove_project(project, directory, force):
         shutil.rmtree(proj_path)
         return
 
-    output = 'Failed. There are some unpushed changes! See below\n'
+    output = 'Failed. There are some unpushed changes or problems! See below\n'
     if stashed:
         output += f'\nStashes:\n{stashed}'
     if unpushed:
