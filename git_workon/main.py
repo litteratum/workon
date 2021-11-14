@@ -28,6 +28,9 @@ def main():
     except script.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)
+    except Exception as exc:
+        logging.error('Unexpected script error: %s', exc)
+        sys.exit(2)
 
 
 if __name__ == '__main__':

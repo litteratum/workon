@@ -98,8 +98,7 @@ def parse_args(user_config):
     try:
         os.makedirs(args.directory, exist_ok=True)
     except OSError as exc:
-        raise ScriptError(
-            'Failed to create working directory: %s' % exc) from exc
+        raise ScriptError('Failed to create working directory: {exc}') from exc
 
     if not os.access(args.directory, os.R_OK) \
             or not os.access(args.directory, os.W_OK):

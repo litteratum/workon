@@ -10,6 +10,16 @@ from git_workon import script
 from git_workon.script import ScriptError
 
 
+def add_git_project(directory: str) -> str:
+    """Add git project to the `directory`.
+
+    :returns: path to the GIT project
+    """
+    proj_dir = tempfile.mkdtemp(dir=directory)
+    os.mkdir(os.path.join(proj_dir, '.git'))
+    return proj_dir
+
+
 def test_done_no_such_project():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         args = Namespace(project='dummy', directory=tmp_dir_path)
@@ -63,7 +73,7 @@ def test_done_all_filetypes_removed():
 @patch('git_workon.script.git.get_stash_info', Mock(return_value='stash'))
 def test_done_project_found_git_stashed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        proj_path = add_git_project(tmp_dir_path)
 
         args = Namespace(
             project=os.path.basename(proj_path), directory=tmp_dir_path,
@@ -93,7 +103,7 @@ def test_done_project_found_git_stashed_forced_ok():
 )
 def test_done_project_found_git_unpushed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        proj_path = add_git_project(tmp_dir_path)
 
         args = Namespace(
             project=os.path.basename(proj_path), directory=tmp_dir_path,
@@ -126,7 +136,7 @@ def test_done_project_found_git_unpushed_forced_ok():
 )
 def test_done_project_found_git_unstaged():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        proj_path = add_git_project(tmp_dir_path)
 
         args = Namespace(
             project=os.path.basename(proj_path), directory=tmp_dir_path,
@@ -173,7 +183,7 @@ def test_done_project_found_all_unpushed(
     mc_tags.return_value = tags
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
+        proj_path = add_git_project(tmp_dir_path)
 
         args = Namespace(
             project=os.path.basename(proj_path), directory=tmp_dir_path,
@@ -190,9 +200,8 @@ def test_done_project_found_all_unpushed(
 @patch('git_workon.script.git.get_unpushed_tags', Mock(return_value=''))
 def test_done_all_projects_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        tempfile.mkdtemp(dir=tmp_dir_path)
-        tempfile.mkdtemp(dir=tmp_dir_path)
-        tempfile.mkstemp(dir=tmp_dir_path)
+        for _ in range(2):
+            add_git_project(tmp_dir_path)
 
         args = Namespace(directory=tmp_dir_path, project=None, force=False)
         script.done(args)
@@ -209,10 +218,8 @@ def test_done_all_projects_couple_are_dirty_but_all_tried_to_be_removed(
     )
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
-        tempfile.mkdtemp(dir=tmp_dir_path)
-        tempfile.mkdtemp(dir=tmp_dir_path)
-        tempfile.mkdtemp(dir=tmp_dir_path)
-        tempfile.mkdtemp(dir=tmp_dir_path)
+        for _ in range(4):
+            add_git_project(tmp_dir_path)
 
         args = Namespace(directory=tmp_dir_path, project=None, force=False)
         script.done(args)
