@@ -52,7 +52,7 @@ def get_unpushed_tags(directory: str) -> str:
             cwd=directory, capture_output=True, text=True, check=True
         ).stderr
     except subprocess.CalledProcessError as exc:
-        return 'Failed to check unpushed tags: {}'.format(exc.stderr)
+        return f'Failed to check unpushed tags: {exc.stderr}'
 
     if 'new tag' not in info:
         return ''
@@ -68,5 +68,4 @@ def clone(source: str, destination: str):
             check=True, capture_output=True, text=True
         )
     except subprocess.CalledProcessError as exc:
-        raise GITError(
-            'Failed to clone "%s":\n%s' % (source, exc.stderr)) from exc
+        raise GITError(f'Failed to clone "{source}":\n{exc.stderr}') from exc

@@ -33,7 +33,7 @@ def _validate_config(config):
 def get_config():
     """Return config loaded from `CONFIG_PATH`."""
     try:
-        with open(CONFIG_PATH) as file:
+        with open(CONFIG_PATH, encoding='utf8') as file:
             config = json.load(file)
     except json.JSONDecodeError as exc:
         logging.warning('Failed to load user config file: %s. Skipping', exc)
@@ -46,9 +46,47 @@ def get_config():
     return _validate_config(config)
 
 
+def done(args):
+    """Finish up with a project(s)."""
+    try:
+        projects = os.listdir(args.directory)
+    except OSError as exc:
+        raise ScriptError(
+            f'Oops, can\'t access working directory: {exc}'
+        ) from exc
+
+    if args.project:
+        if args.project not in projects:
+            raise ScriptError(
+                f'"{args.project}" not found in "{args.directory}"'
+            )
+        _remove_project(args.project, args.directory, args.force)
+    else:
+        for project in projects:
+            if os.path.isdir(os.path.join(args.directory, project)):
+                try:
+                    _remove_project(project, args.directory, args.force)
+                except ScriptError as exc:
+                    logging.error(exc)
+                    continue
+        # there may be some files left
+        for filepath in glob.glob(os.path.join(args.directory, '*')):
+            if os.path.islink(filepath):
+                logging.debug('Removing symlink "%s"', filepath)
+                os.unlink(filepath)
+            elif not os.path.isdir(filepath):
+                logging.debug('Removing file "%s"', filepath)
+                os.remove(filepath)
+
+
 def _remove_project(project, directory, force):
     logging.info('Finishing up "%s"', project)
     proj_path = os.path.join(directory, project)
+
+    if '.git' not in os.listdir(proj_path):
+        logging.debug('Not a GIT repository, removing "%s"', proj_path)
+        shutil.rmtree(proj_path)
+        return
 
     stashed = git.get_stash_info(proj_path)
     unpushed = git.get_unpushed_branches_info(proj_path)
@@ -75,37 +113,6 @@ def _remove_project(project, directory, force):
     raise ScriptError(output)
 
 
-def done(args):
-    """Finish up with a project(s)."""
-    try:
-        projects = os.listdir(args.directory)
-    except OSError as exc:
-        raise ScriptError(
-            'Oops, can\'t access working directory: %s' % exc) from exc
-
-    if args.project:
-        if args.project not in projects:
-            raise ScriptError(
-                '"%s" not found in "%s"' % (args.project, args.directory))
-        _remove_project(args.project, args.directory, args.force)
-    else:
-        for project in projects:
-            if os.path.isdir(os.path.join(args.directory, project)):
-                try:
-                    _remove_project(project, args.directory, args.force)
-                except ScriptError as exc:
-                    logging.error(exc)
-                    continue
-        # there may be some files left
-        for filepath in glob.glob(os.path.join(args.directory, '*')):
-            if os.path.islink(filepath):
-                logging.debug('Removing symlink "%s"', filepath)
-                os.unlink(filepath)
-            elif not os.path.isdir(filepath):
-                logging.debug('Removing file "%s"', filepath)
-                os.remove(filepath)
-
-
 def start(args):
     """Start your work on a project.
 
@@ -126,7 +133,7 @@ def start(args):
 
     for i, source in enumerate(args.source, start=1):
         project_path = source.strip('/') + '/' + args.project + '.git'
-        destination = args.directory + '/{}'.format(args.project)
+        destination = args.directory + f'/{args.project}'
 
         logging.info(
             'Cloning "%s" from "%s" into "%s"',
@@ -141,7 +148,7 @@ def start(args):
                 raise ScriptError(
                     f'Failed to clone "{args.project}". Tried all configured '
                     'sources'
-                )
+                ) from exc
             logging.debug(exc)
 
     if not args.noopen:
@@ -153,22 +160,21 @@ def _open_project(directory, project, editor):
 
     if not os.path.isdir(project_dir):
         raise ScriptError(
-            'No project named "%s" found under your working directory'
-            % project
+            f'No project named "{project}" found under your working directory'
         )
 
-    for editor in (editor, os.environ.get('EDITOR'), 'vi', 'vim'):
-        if editor:
+    for editor_ in (editor, os.environ.get('EDITOR'), 'vi', 'vim'):
+        if editor_:
             logging.info(
-                'Trying to open "%s" with "%s" editor', project, editor)
+                'Trying to open "%s" with "%s" editor', project, editor_)
             try:
-                result = subprocess.run([editor, project_dir], check=False)
+                result = subprocess.run([editor_, project_dir], check=False)
             except OSError as exc:
                 logging.error(
-                    'Failed to open "%s" with "%s": %s', project, editor, exc
+                    'Failed to open "%s" with "%s": %s', project, editor_, exc
                 )
             else:
                 if result.returncode == 0:
                     break
     else:
-        raise ScriptError('No suitable editor found to open "%s"' % project)
+        raise ScriptError(f'No suitable editor found to open "{project}"')

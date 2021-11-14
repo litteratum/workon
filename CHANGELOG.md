@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [1.2.4] - 2021-11-14
+### Fixed
+* Don't check directories without ".git" folder
+* `pylint` warnings
+* Handling of unexpected script errors
+
+
 ## [1.2.3] - 2021-10-31
 ### Fixed
 * A project(s) now is/are not removed if the check for unpushed git tags fails
