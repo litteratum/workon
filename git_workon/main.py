@@ -23,6 +23,9 @@ def main():
             script.start(args)
         elif args.command == "done":
             script.done(args)
+    except KeyboardInterrupt:
+        logging.info("\nCanceled by user")
+        sys.exit(0)
     except script.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)
