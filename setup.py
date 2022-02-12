@@ -1,23 +1,8 @@
 """setup.py for the script."""
-import os
-import shutil
-
 from setuptools import find_packages, setup
-from setuptools.command.install import install
-
-USER_CONFIG_PATH = os.path.expanduser("~/.config/git_workon/config.json")
-
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
-
-
-class LocalInstall(install):
-    def run(self):
-        os.makedirs(os.path.dirname(USER_CONFIG_PATH), exist_ok=True)
-        if not os.path.exists(USER_CONFIG_PATH):
-            shutil.copy("config.json", USER_CONFIG_PATH)
-        install.run(self)
 
 
 setup(
@@ -34,6 +19,9 @@ setup(
     license_files=("LICENSE",),
     url="https://github.com/ReturnedVoid/workon",
     packages=find_packages(exclude=("tests.*", "tests")),
+    install_requires=[
+        "appdirs",
+    ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Environment :: Console",
@@ -47,7 +35,4 @@ setup(
     data_files=[
         ("", ["config.json"]),
     ],
-    cmdclass={
-        "install": LocalInstall,
-    },
 )

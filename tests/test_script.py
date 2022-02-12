@@ -364,12 +364,12 @@ def test_get_config():
         json.dump(config, file)
         file.flush()
 
-        with patch('git_workon.script.CONFIG_PATH', file.name):
+        with patch('git_workon.script._CONFIG_PATH', file.name):
             assert script.get_config() == config
 
 
 def test_get_config_no_config_file():
-    with patch('git_workon.script.CONFIG_PATH', 'nonexistent'):
+    with patch('git_workon.script._CONFIG_PATH', 'nonexistent'):
         assert script.get_config() == {}
 
 
@@ -378,7 +378,7 @@ def test_get_config_wrong_json_file():
         file.write('oops')
         file.flush()
 
-        with patch('git_workon.script.CONFIG_PATH', file.name):
+        with patch('git_workon.script._CONFIG_PATH', file.name):
             assert script.get_config() == {}
 
 
@@ -394,6 +394,21 @@ def test_get_config_invalid_config(whats_wrong):
         json.dump(config, file)
         file.flush()
 
-        with patch('git_workon.script.CONFIG_PATH', file.name):
+        with patch('git_workon.script._CONFIG_PATH', file.name):
             with pytest.raises(ScriptError):
                 script.get_config()
+
+
+@patch('git_workon.script.subprocess')
+def test_config_command_creates_config_dir(mc_subprocess):
+    mc_subprocess.run.return_value = Mock(returncode=0)
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        config_dir = os.path.join(tmp_dir_path, "config_dir")
+        config_path = os.path.join(config_dir, "config.json")
+        assert not os.path.exists(config_dir)
+
+        with patch.object(script, "_CONFIG_DIR", config_dir):
+            with patch.object(script, "_CONFIG_PATH", config_path):
+                script.config(Namespace(editor="vi"))
+
+        assert os.path.exists(config_path)

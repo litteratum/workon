@@ -23,6 +23,8 @@ def main():
             script.start(args)
         elif args.command == "done":
             script.done(args)
+        elif args.command == "config":
+            script.config(args)
     except KeyboardInterrupt:
         logging.info("\nCanceled by user")
         sys.exit(0)

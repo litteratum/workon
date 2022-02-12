@@ -5,11 +5,14 @@ import logging
 import os
 import shutil
 import subprocess
+from typing import Optional
+
+import appdirs
 
 from . import git
 
-
-CONFIG_PATH = os.path.expanduser("~/.config/git_workon/config.json")
+_CONFIG_DIR = appdirs.user_config_dir("git_workon")
+_CONFIG_PATH = os.path.join(_CONFIG_DIR, "config.json")
 
 
 class ScriptError(Exception):
@@ -34,9 +37,9 @@ def _validate_config(config):
 
 
 def get_config():
-    """Return config loaded from `CONFIG_PATH`."""
+    """Return config loaded from `_CONFIG_PATH`."""
     try:
-        with open(CONFIG_PATH, encoding="utf8") as file:
+        with open(_CONFIG_PATH, encoding="utf8") as file:
             config = json.load(file)
     except json.JSONDecodeError as exc:
         logging.warning("Failed to load user config file: %s. Skipping", exc)
@@ -168,6 +171,23 @@ def start(args):
         _open_project(args.directory, args.project, args.editor)
 
 
+def _open_with_editor(editor: Optional[str], path: str):
+    for editor_ in (editor, os.environ.get("EDITOR"), "vi", "vim"):
+        if editor_:
+            logging.info('Trying to open "%s" with "%s" editor', path, editor_)
+            try:
+                result = subprocess.run([editor_, path], check=False)
+            except OSError as exc:
+                logging.error(
+                    'Failed to open "%s" with "%s": %s', path, editor_, exc
+                )
+            else:
+                if result.returncode == 0:
+                    break
+    else:
+        raise ScriptError(f'No suitable editor found to open "{path}"')
+
+
 def _open_project(directory, project, editor):
     project_dir = os.path.join(directory, project)
 
@@ -176,19 +196,19 @@ def _open_project(directory, project, editor):
             f'No project named "{project}" found under your working directory'
         )
 
-    for editor_ in (editor, os.environ.get("EDITOR"), "vi", "vim"):
-        if editor_:
-            logging.info(
-                'Trying to open "%s" with "%s" editor', project, editor_
-            )
-            try:
-                result = subprocess.run([editor_, project_dir], check=False)
-            except OSError as exc:
-                logging.error(
-                    'Failed to open "%s" with "%s": %s', project, editor_, exc
-                )
-            else:
-                if result.returncode == 0:
-                    break
-    else:
-        raise ScriptError(f'No suitable editor found to open "{project}"')
+    _open_with_editor(editor, project_dir)
+
+
+def config(args):
+    """Handle `config` command.
+
+    Create config directory and opens an editor to modify the config.
+    """
+    logging.debug('Creating config directory "%s"', _CONFIG_DIR)
+    os.makedirs(_CONFIG_DIR, exist_ok=True)
+
+    if not os.path.exists(_CONFIG_PATH):
+        logging.debug('Copying config template to "%s"', _CONFIG_PATH)
+        shutil.copy("config.json", _CONFIG_PATH)
+
+    _open_with_editor(args.editor, _CONFIG_PATH)

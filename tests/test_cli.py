@@ -135,3 +135,8 @@ def test_parse_args_directory_path_expanded():
         command='start', directory=os.environ.get('HOME'), source=['some'],
         verbose=0, project='my_project', noopen=False, editor='my_editor'
     )
+
+
+def test_config_command():
+    sys.argv = ['git_workon', 'config', '-e', 'editor']
+    assert cli.parse_args({}) == Namespace(command='config', verbose=0, editor='editor')

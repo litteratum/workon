@@ -1,6 +1,7 @@
 """Command Line Interface processing."""
 import argparse
 import os
+from dataclasses import dataclass
 
 from .script import ScriptError
 
@@ -15,31 +16,33 @@ class ExtendAction(argparse.Action):
         setattr(namespace, self.dest, items)
 
 
+@dataclass
+class ArgParseArgument:
+    """Wrapper encapsulating `argparse` argument."""
+
+    positional: tuple
+    keyword: dict
+
+
 def _append_start_command(subparsers, parent, user_config):
-    start_command = subparsers.add_parser(
+    start_parser = subparsers.add_parser(
         "start",
         help="start your work on a project",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=[parent],
         add_help=False,
     )
-    start_command.register("action", "extend", ExtendAction)
+    start_parser.register("action", "extend", ExtendAction)
 
-    start_command.add_argument("project", help="project name to start with")
-    start_command.add_argument(
+    start_parser.add_argument("project", help="project name to start with")
+    start_parser.add_argument(
         "-s",
         "--source",
         help="git source including username",
         action="extend",
         nargs="+",
     )
-    start_command.add_argument(
-        "-e",
-        "--editor",
-        help="editor to use to open a project",
-        default=user_config.get("editor"),
-    )
-    start_command.add_argument(
+    start_parser.add_argument(
         "-n",
         "--no-open",
         dest="noopen",
@@ -47,9 +50,11 @@ def _append_start_command(subparsers, parent, user_config):
         action="store_true",
     )
 
+    return start_parser
+
 
 def _append_done_command(subparsers, parent):
-    done_command = subparsers.add_parser(
+    done_parser = subparsers.add_parser(
         "done",
         help="finish your work and clean working directory",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -57,7 +62,7 @@ def _append_done_command(subparsers, parent):
         add_help=False,
     )
 
-    done_command.add_argument(
+    done_parser.add_argument(
         "project",
         nargs="?",
         help=(
@@ -65,7 +70,7 @@ def _append_done_command(subparsers, parent):
             "specified, all projects will be finished"
         ),
     )
-    done_command.add_argument(
+    done_parser.add_argument(
         "-f",
         "--force",
         help=(
@@ -73,6 +78,18 @@ def _append_done_command(subparsers, parent):
             "there are some unpushed/unstaged changes or stashes"
         ),
         action="store_true",
+    )
+
+    return done_parser
+
+
+def _append_config_command(subparsers, parent):
+    return subparsers.add_parser(
+        "config",
+        help="alter the configuration",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        parents=[parent],
+        add_help=False,
     )
 
 
@@ -86,13 +103,22 @@ def _parse_args(user_config):
         required=True,
     )
 
-    parent_parser = argparse.ArgumentParser()
-    parent_parser.add_argument(
-        "-d",
-        "--directory",
-        help="working directory",
-        default=user_config.get("dir"),
+    directory_arg = ArgParseArgument(
+        positional=("-d", "--directory"),
+        keyword={
+            "help": "working directory",
+            "default": user_config.get("dir"),
+        },
     )
+    editor_arg = ArgParseArgument(
+        positional=("-e", "--editor"),
+        keyword={
+            "help": "editor used to open a project/configuration",
+            "default": user_config.get("editor"),
+        },
+    )
+
+    parent_parser = argparse.ArgumentParser()
     parent_parser.add_argument(
         "-v",
         "--verbose",
@@ -101,8 +127,20 @@ def _parse_args(user_config):
         help="get more information of what's going on",
     )
 
-    _append_start_command(subparsers, parent_parser, user_config)
-    _append_done_command(subparsers, parent_parser)
+    start_parser = _append_start_command(
+        subparsers, parent_parser, user_config
+    )
+    done_parser = _append_done_command(subparsers, parent_parser)
+    config_parser = _append_config_command(subparsers, parent_parser)
+
+    for subparser in start_parser, done_parser:
+        subparser.add_argument(
+            *directory_arg.positional, **directory_arg.keyword
+        )
+    for subparser in config_parser, start_parser:
+        subparser.add_argument(
+            *editor_arg.positional, **editor_arg.keyword
+        )
 
     return parser.parse_args()
 
@@ -111,25 +149,27 @@ def parse_args(user_config):
     """Parse CLI args."""
     args = _parse_args(user_config)
 
-    if not args.directory:
-        raise ScriptError(
-            "Working directory is not specified. Please see script --help or "
-            "the documentation to know how to configure the script"
-        )
+    if hasattr(args, "directory"):
+        if not args.directory:
+            raise ScriptError(
+                "Working directory is not specified. Please see script --help"
+                " or the documentation to know how to configure the script"
+            )
+        args.directory = os.path.expanduser(args.directory)
 
-    args.directory = os.path.expanduser(args.directory)
+        try:
+            os.makedirs(args.directory, exist_ok=True)
+        except OSError as exc:
+            raise ScriptError(
+                "Failed to create working directory: {exc}"
+            ) from exc
 
-    try:
-        os.makedirs(args.directory, exist_ok=True)
-    except OSError as exc:
-        raise ScriptError("Failed to create working directory: {exc}") from exc
-
-    if not os.access(args.directory, os.R_OK) or not os.access(
-        args.directory, os.W_OK
-    ):
-        raise ScriptError(
-            "Oops. Specified working directory is not readable/writable"
-        )
+        if not os.access(args.directory, os.R_OK) or not os.access(
+            args.directory, os.W_OK
+        ):
+            raise ScriptError(
+                "Oops. Specified working directory is not readable/writable"
+            )
 
     if args.command == "start":
         if user_config.get("source"):
@@ -143,7 +183,7 @@ def parse_args(user_config):
                 "GIT source is not specified. Please see script --help or "
                 "the documentation to know how to configure the script"
             )
-    if args.project:
+    if hasattr(args, "project") and args.project:
         args.project = args.project.strip("/ ")
 
     return args
