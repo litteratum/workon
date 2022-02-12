@@ -26,6 +26,29 @@ def test_parse_args_command_no_args():
         cli.parse_args(user_config={})
 
 
+def test_parse_args_project_name_stripped():
+    """Test that a project name is stripped."""
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        sys.argv = ['git_workon', 'start', ' my_project/ ', '-d', tmp_dir_path, "-s", "some"]
+
+        assert cli.parse_args({}) == Namespace(
+            command='start', directory=tmp_dir_path, source=['some'],
+            verbose=0, project='my_project', noopen=False, editor=None
+        )
+
+        sys.argv = ['git_workon', 'done', ' my_project/ ', '-d', tmp_dir_path]
+        assert cli.parse_args({}) == Namespace(
+            command='done', directory=tmp_dir_path,
+            verbose=0, project='my_project', force=False
+        )
+
+        sys.argv = ['git_workon', 'done', '-d', tmp_dir_path]
+        assert cli.parse_args({}) == Namespace(
+            command='done', directory=tmp_dir_path,
+            verbose=0, project=None, force=False
+        )
+
+
 def test_parse_args_start_command_no_args_config_variables_set():
     sys.argv = ['git_workon', 'start', 'my_project']
 

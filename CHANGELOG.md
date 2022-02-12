@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [1.2.5] - 2022-02-12
+### Fixed
+* Strip a project name to support command like `gw done project/`
+
+### Added
+* Apply `black` formatter
+* Handling for `KeyboardInterrupt`
+
+
 ## [1.2.4] - 2021-11-14
 ### Fixed
 * Don't check directories without ".git" folder

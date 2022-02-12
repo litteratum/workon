@@ -11,8 +11,11 @@ def get_stash_info(directory: str):
     """Return stash info under `directory`."""
     logging.debug('Checking GIT stashes under "%s"', directory)
     return subprocess.run(
-        'git stash list'.split(), cwd=directory,
-        capture_output=True, text=True, check=False
+        "git stash list".split(),
+        cwd=directory,
+        capture_output=True,
+        text=True,
+        check=False,
     ).stdout
 
 
@@ -23,8 +26,11 @@ def get_unpushed_branches_info(directory: str) -> str:
     """
     logging.debug('Checking for unpushed GIT commits under "%s"', directory)
     return subprocess.run(
-        'git log --branches --not --remotes --decorate --oneline'.split(),
-        cwd=directory, capture_output=True, text=True, check=False
+        "git log --branches --not --remotes --decorate --oneline".split(),
+        cwd=directory,
+        capture_output=True,
+        text=True,
+        check=False,
     ).stdout
 
 
@@ -32,8 +38,11 @@ def get_unstaged_info(directory: str) -> str:
     """Return information about unstaged changes."""
     logging.debug('Checking for unstaged changes under "%s"', directory)
     return subprocess.run(
-        'git status --short'.split(),
-        cwd=directory, capture_output=True, text=True, check=False
+        "git status --short".split(),
+        cwd=directory,
+        capture_output=True,
+        text=True,
+        check=False,
     ).stdout
 
 
@@ -48,14 +57,17 @@ def get_unpushed_tags(directory: str) -> str:
 
     try:
         info = subprocess.run(
-            'git push --tags --dry-run'.split(),
-            cwd=directory, capture_output=True, text=True, check=True
+            "git push --tags --dry-run".split(),
+            cwd=directory,
+            capture_output=True,
+            text=True,
+            check=True,
         ).stderr
     except subprocess.CalledProcessError as exc:
-        return f'Failed to check unpushed tags: {exc.stderr}'
+        return f"Failed to check unpushed tags: {exc.stderr}"
 
-    if 'new tag' not in info:
-        return ''
+    if "new tag" not in info:
+        return ""
     return info
 
 
@@ -64,8 +76,10 @@ def clone(source: str, destination: str):
     try:
         logging.debug('Cloning "%s" to "%s"', source, destination)
         subprocess.run(
-            ['git', 'clone', source, destination],
-            check=True, capture_output=True, text=True
+            ["git", "clone", source, destination],
+            check=True,
+            capture_output=True,
+            text=True,
         )
     except subprocess.CalledProcessError as exc:
         raise GITError(f'Failed to clone "{source}":\n{exc.stderr}') from exc
