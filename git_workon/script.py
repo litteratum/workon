@@ -9,7 +9,7 @@ import subprocess
 from . import git
 
 
-CONFIG_PATH = os.path.expanduser('~/.config/git_workon/config.json')
+CONFIG_PATH = os.path.expanduser("~/.config/git_workon/config.json")
 
 
 class ScriptError(Exception):
@@ -17,15 +17,18 @@ class ScriptError(Exception):
 
 
 def _validate_config(config):
-    if config.get('dir') and not isinstance(config['dir'], str):
+    if config.get("dir") and not isinstance(config["dir"], str):
         raise ScriptError(
-            'Invalid config: "dir" parameter should be of string type')
-    if config.get('editor') and not isinstance(config['editor'], str):
+            'Invalid config: "dir" parameter should be of string type'
+        )
+    if config.get("editor") and not isinstance(config["editor"], str):
         raise ScriptError(
-            'Invalid config: "editor" parameter should be of string type')
-    if config.get('source') and not isinstance(config['source'], list):
+            'Invalid config: "editor" parameter should be of string type'
+        )
+    if config.get("source") and not isinstance(config["source"], list):
         raise ScriptError(
-            'Invalid config: "source" parameter should be of array type')
+            'Invalid config: "source" parameter should be of array type'
+        )
 
     return config
 
@@ -33,14 +36,15 @@ def _validate_config(config):
 def get_config():
     """Return config loaded from `CONFIG_PATH`."""
     try:
-        with open(CONFIG_PATH, encoding='utf8') as file:
+        with open(CONFIG_PATH, encoding="utf8") as file:
             config = json.load(file)
     except json.JSONDecodeError as exc:
-        logging.warning('Failed to load user config file: %s. Skipping', exc)
+        logging.warning("Failed to load user config file: %s. Skipping", exc)
         config = {}
     except OSError as exc:
         logging.warning(
-            'Failed to load user configuration file: %s. Skipping', exc)
+            "Failed to load user configuration file: %s. Skipping", exc
+        )
         config = {}
 
     return _validate_config(config)
@@ -52,7 +56,7 @@ def done(args):
         projects = os.listdir(args.directory)
     except OSError as exc:
         raise ScriptError(
-            f'Oops, can\'t access working directory: {exc}'
+            f"Oops, can't access working directory: {exc}"
         ) from exc
 
     if args.project:
@@ -70,7 +74,7 @@ def done(args):
                     logging.error(exc)
                     continue
         # there may be some files left
-        for filepath in glob.glob(os.path.join(args.directory, '*')):
+        for filepath in glob.glob(os.path.join(args.directory, "*")):
             if os.path.islink(filepath):
                 logging.debug('Removing symlink "%s"', filepath)
                 os.unlink(filepath)
@@ -83,7 +87,7 @@ def _remove_project(project, directory, force):
     logging.info('Finishing up "%s"', project)
     proj_path = os.path.join(directory, project)
 
-    if '.git' not in os.listdir(proj_path):
+    if ".git" not in os.listdir(proj_path):
         logging.debug('Not a GIT repository, removing "%s"', proj_path)
         shutil.rmtree(proj_path)
         return
@@ -93,20 +97,27 @@ def _remove_project(project, directory, force):
     unstaged = git.get_unstaged_info(proj_path)
     tags = git.get_unpushed_tags(proj_path)
 
-    if force or not any([stashed, unpushed, unstaged, tags, ]):
+    if force or not any(
+        [
+            stashed,
+            unpushed,
+            unstaged,
+            tags,
+        ]
+    ):
         logging.debug('Removing "%s"', proj_path)
         shutil.rmtree(proj_path)
         return
 
-    output = 'Failed. There are some unpushed changes or problems! See below\n'
+    output = "Failed. There are some unpushed changes or problems! See below\n"
     if stashed:
-        output += f'\nStashes:\n{stashed}'
+        output += f"\nStashes:\n{stashed}"
     if unpushed:
-        output += f'\nCommits:\n{unpushed}'
+        output += f"\nCommits:\n{unpushed}"
     if unstaged:
-        output += f'\nNot staged:\n{unstaged}'
+        output += f"\nNot staged:\n{unstaged}"
     if tags:
-        output += f'\nTags:\n{tags}'
+        output += f"\nTags:\n{tags}"
 
     output += '\nPush your local changes or use "-f" flag to drop them'
 
@@ -121,23 +132,25 @@ def start(args):
       * checks if working directory is empty
     """
     if args.project in os.listdir(args.directory):
-        logging.info('The project is already in the working directory')
+        logging.info("The project is already in the working directory")
         if args.noopen:
             logging.warning(
-                'The command was executed for existing project with --noopen '
-                'flag. Nothing to do.'
+                "The command was executed for existing project with --noopen "
+                "flag. Nothing to do."
             )
         else:
             _open_project(args.directory, args.project, args.editor)
         return
 
     for i, source in enumerate(args.source, start=1):
-        project_path = source.strip('/') + '/' + args.project + '.git'
-        destination = args.directory + f'/{args.project}'
+        project_path = source.strip("/") + "/" + args.project + ".git"
+        destination = args.directory + f"/{args.project}"
 
         logging.info(
             'Cloning "%s" from "%s" into "%s"',
-            args.project, project_path, destination
+            args.project,
+            project_path,
+            destination,
         )
 
         try:
@@ -147,7 +160,7 @@ def start(args):
             if i == len(args.source):
                 raise ScriptError(
                     f'Failed to clone "{args.project}". Tried all configured '
-                    'sources'
+                    "sources"
                 ) from exc
             logging.debug(exc)
 
@@ -163,10 +176,11 @@ def _open_project(directory, project, editor):
             f'No project named "{project}" found under your working directory'
         )
 
-    for editor_ in (editor, os.environ.get('EDITOR'), 'vi', 'vim'):
+    for editor_ in (editor, os.environ.get("EDITOR"), "vi", "vim"):
         if editor_:
             logging.info(
-                'Trying to open "%s" with "%s" editor', project, editor_)
+                'Trying to open "%s" with "%s" editor', project, editor_
+            )
             try:
                 result = subprocess.run([editor_, project_dir], check=False)
             except OSError as exc:
