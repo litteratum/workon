@@ -118,5 +118,7 @@ def parse_args(user_config):
                 'GIT source is not specified. Please see script --help or '
                 'the documentation to know how to configure the script'
             )
+    if args.project:
+        args.project = args.project.strip("/ ")
 
     return args
