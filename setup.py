@@ -22,7 +22,7 @@ class LocalInstall(install):
 
 setup(
     name="git_workon",
-    version="1.2.4",
+    version="1.2.5",
     author="Andrey Nechaev",
     author_email="andrewnech@gmail.com",
     description=(
