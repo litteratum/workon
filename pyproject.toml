@@ -1,6 +1,36 @@
-[build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+[tool.poetry]
+name = "git_workon"
+version = "1.2.5"
+description = "Utility that automates projects clone/remove and checks for nonpushed changes on removal"
+authors = ["Andrey Nechaev <andrewnech@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ReturnedVoid/workon"
+classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3.7",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Utilities",
 ]
-build-backend = "setuptools.build_meta"
+
+[tool.poetry.scripts]
+gw = 'git_workon.main:main'
+
+[tool.poetry.dependencies]
+python = "~3.7"
+appdirs = "^1.4.4"
+
+[tool.poetry.dev-dependencies]
+black = "^22.1.0"
+pylint = "^2.12.2"
+flake8 = "^4.0.1"
+pydocstyle = "^6.1.1"
+pytest = "^7.0.1"
+pytest-cov = "^3.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

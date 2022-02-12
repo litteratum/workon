@@ -8,6 +8,7 @@ import subprocess
 from typing import Optional
 
 import appdirs
+import pkg_resources
 
 from . import git
 
@@ -209,6 +210,9 @@ def config(args):
 
     if not os.path.exists(_CONFIG_PATH):
         logging.debug('Copying config template to "%s"', _CONFIG_PATH)
-        shutil.copy("config.json", _CONFIG_PATH)
+        shutil.copy(
+            pkg_resources.resource_filename("git_workon", "config.json"),
+            _CONFIG_PATH,
+        )
 
     _open_with_editor(args.editor, _CONFIG_PATH)
