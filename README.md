@@ -1,3 +1,5 @@
+[![tests](https://github.com/ReturnedVoid/workon/actions/workflows/ci.yml/badge.svg)](https://github.com/ReturnedVoid/workon)
+
 # GIT workon
 
 Do you often need to clone some project, solve one task and remove it from your filesystem?
