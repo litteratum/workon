@@ -24,7 +24,7 @@ class ArgParseArgument:
     keyword: dict
 
 
-def _append_start_command(subparsers, parent, user_config):
+def _append_start_command(subparsers, parent):
     start_parser = subparsers.add_parser(
         "start",
         help="start your work on a project",
@@ -127,20 +127,14 @@ def _parse_args(user_config):
         help="get more information of what's going on",
     )
 
-    start_parser = _append_start_command(
-        subparsers, parent_parser, user_config
-    )
+    start_parser = _append_start_command(subparsers, parent_parser)
     done_parser = _append_done_command(subparsers, parent_parser)
     config_parser = _append_config_command(subparsers, parent_parser)
 
     for subparser in start_parser, done_parser:
-        subparser.add_argument(
-            *directory_arg.positional, **directory_arg.keyword
-        )
+        subparser.add_argument(*directory_arg.positional, **directory_arg.keyword)
     for subparser in config_parser, start_parser:
-        subparser.add_argument(
-            *editor_arg.positional, **editor_arg.keyword
-        )
+        subparser.add_argument(*editor_arg.positional, **editor_arg.keyword)
 
     return parser.parse_args()
 
@@ -160,9 +154,7 @@ def parse_args(user_config):
         try:
             os.makedirs(args.directory, exist_ok=True)
         except OSError as exc:
-            raise ScriptError(
-                "Failed to create working directory: {exc}"
-            ) from exc
+            raise ScriptError("Failed to create working directory: {exc}") from exc
 
         if not os.access(args.directory, os.R_OK) or not os.access(
             args.directory, os.W_OK

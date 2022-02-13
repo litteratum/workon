@@ -20,38 +20,30 @@ class ScriptError(Exception):
     """Error in script."""
 
 
-def _validate_config(config):
-    if config.get("dir") and not isinstance(config["dir"], str):
-        raise ScriptError(
-            'Invalid config: "dir" parameter should be of string type'
-        )
-    if config.get("editor") and not isinstance(config["editor"], str):
-        raise ScriptError(
-            'Invalid config: "editor" parameter should be of string type'
-        )
-    if config.get("source") and not isinstance(config["source"], list):
-        raise ScriptError(
-            'Invalid config: "source" parameter should be of array type'
-        )
+def _validate_config(user_config):
+    if user_config.get("dir") and not isinstance(user_config["dir"], str):
+        raise ScriptError('Invalid config: "dir" parameter should be of string type')
+    if user_config.get("editor") and not isinstance(user_config["editor"], str):
+        raise ScriptError('Invalid config: "editor" parameter should be of string type')
+    if user_config.get("source") and not isinstance(user_config["source"], list):
+        raise ScriptError('Invalid config: "source" parameter should be of array type')
 
-    return config
+    return user_config
 
 
 def get_config():
     """Return config loaded from `_CONFIG_PATH`."""
     try:
         with open(_CONFIG_PATH, encoding="utf8") as file:
-            config = json.load(file)
+            user_config = json.load(file)
     except json.JSONDecodeError as exc:
         logging.warning("Failed to load user config file: %s. Skipping", exc)
-        config = {}
+        user_config = {}
     except OSError as exc:
-        logging.warning(
-            "Failed to load user configuration file: %s. Skipping", exc
-        )
-        config = {}
+        logging.warning("Failed to load user configuration file: %s. Skipping", exc)
+        user_config = {}
 
-    return _validate_config(config)
+    return _validate_config(user_config)
 
 
 def done(args):
@@ -59,15 +51,11 @@ def done(args):
     try:
         projects = os.listdir(args.directory)
     except OSError as exc:
-        raise ScriptError(
-            f"Oops, can't access working directory: {exc}"
-        ) from exc
+        raise ScriptError(f"Oops, can't access working directory: {exc}") from exc
 
     if args.project:
         if args.project not in projects:
-            raise ScriptError(
-                f'"{args.project}" not found in "{args.directory}"'
-            )
+            raise ScriptError(f'"{args.project}" not found in "{args.directory}"')
         _remove_project(args.project, args.directory, args.force)
     else:
         for project in projects:
@@ -163,8 +151,7 @@ def start(args):
         except git.GITError as exc:
             if i == len(args.source):
                 raise ScriptError(
-                    f'Failed to clone "{args.project}". Tried all configured '
-                    "sources"
+                    f'Failed to clone "{args.project}". Tried all configured ' "sources"
                 ) from exc
             logging.debug(exc)
 
@@ -179,9 +166,7 @@ def _open_with_editor(editor: Optional[str], path: str):
             try:
                 result = subprocess.run([editor_, path], check=False)
             except OSError as exc:
-                logging.error(
-                    'Failed to open "%s" with "%s": %s', path, editor_, exc
-                )
+                logging.error('Failed to open "%s" with "%s": %s', path, editor_, exc)
             else:
                 if result.returncode == 0:
                     break

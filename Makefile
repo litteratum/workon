@@ -1,3 +1,5 @@
+PACKAGE=git_workon
+
 .PHONY: help
 help:
 	@echo "venv        -> prepare VENV with all dependencies installed"
@@ -27,4 +29,9 @@ clean:
 
 .PHONY: coverage
 coverage:
-	poetry run pytest --cov-report html --cov=git_workon tests/
+	poetry run pytest --cov-report html --cov=$(PACKAGE) tests/
+
+.PHONY: lint
+lint:
+	pylint $(PACKAGE) tests
+	pydocstyle --ignore=D102,D103,D105,D107,D203,D213 $(PACKAGE)/** tests/**

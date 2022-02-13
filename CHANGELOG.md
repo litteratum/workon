@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * `config` command
 * `poetry` integration
 * `tox` integration
+* Integrate and improve linting
 
 ### Removed
 * Config template copy on installation

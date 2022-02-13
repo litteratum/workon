@@ -31,7 +31,7 @@ def main():
     except script.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)
-    except Exception as exc:
+    except Exception as exc:  # pylint:disable=broad-except
         logging.error("Unexpected script error: %s", exc)
         sys.exit(2)
 
