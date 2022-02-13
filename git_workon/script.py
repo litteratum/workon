@@ -5,49 +5,45 @@ import logging
 import os
 import shutil
 import subprocess
+from typing import Optional
+
+import appdirs
+import pkg_resources
 
 from . import git
 
-
-CONFIG_PATH = os.path.expanduser("~/.config/git_workon/config.json")
+_CONFIG_DIR = appdirs.user_config_dir("git_workon")
+_CONFIG_PATH = os.path.join(_CONFIG_DIR, "config.json")
 
 
 class ScriptError(Exception):
     """Error in script."""
 
 
-def _validate_config(config):
-    if config.get("dir") and not isinstance(config["dir"], str):
-        raise ScriptError(
-            'Invalid config: "dir" parameter should be of string type'
-        )
-    if config.get("editor") and not isinstance(config["editor"], str):
-        raise ScriptError(
-            'Invalid config: "editor" parameter should be of string type'
-        )
-    if config.get("source") and not isinstance(config["source"], list):
-        raise ScriptError(
-            'Invalid config: "source" parameter should be of array type'
-        )
+def _validate_config(user_config):
+    if user_config.get("dir") and not isinstance(user_config["dir"], str):
+        raise ScriptError('Invalid config: "dir" parameter should be of string type')
+    if user_config.get("editor") and not isinstance(user_config["editor"], str):
+        raise ScriptError('Invalid config: "editor" parameter should be of string type')
+    if user_config.get("source") and not isinstance(user_config["source"], list):
+        raise ScriptError('Invalid config: "source" parameter should be of array type')
 
-    return config
+    return user_config
 
 
 def get_config():
-    """Return config loaded from `CONFIG_PATH`."""
+    """Return config loaded from `_CONFIG_PATH`."""
     try:
-        with open(CONFIG_PATH, encoding="utf8") as file:
-            config = json.load(file)
+        with open(_CONFIG_PATH, encoding="utf8") as file:
+            user_config = json.load(file)
     except json.JSONDecodeError as exc:
         logging.warning("Failed to load user config file: %s. Skipping", exc)
-        config = {}
+        user_config = {}
     except OSError as exc:
-        logging.warning(
-            "Failed to load user configuration file: %s. Skipping", exc
-        )
-        config = {}
+        logging.warning("Failed to load user configuration file: %s. Skipping", exc)
+        user_config = {}
 
-    return _validate_config(config)
+    return _validate_config(user_config)
 
 
 def done(args):
@@ -55,15 +51,11 @@ def done(args):
     try:
         projects = os.listdir(args.directory)
     except OSError as exc:
-        raise ScriptError(
-            f"Oops, can't access working directory: {exc}"
-        ) from exc
+        raise ScriptError(f"Oops, can't access working directory: {exc}") from exc
 
     if args.project:
         if args.project not in projects:
-            raise ScriptError(
-                f'"{args.project}" not found in "{args.directory}"'
-            )
+            raise ScriptError(f'"{args.project}" not found in "{args.directory}"')
         _remove_project(args.project, args.directory, args.force)
     else:
         for project in projects:
@@ -159,13 +151,27 @@ def start(args):
         except git.GITError as exc:
             if i == len(args.source):
                 raise ScriptError(
-                    f'Failed to clone "{args.project}". Tried all configured '
-                    "sources"
+                    f'Failed to clone "{args.project}". Tried all configured ' "sources"
                 ) from exc
             logging.debug(exc)
 
     if not args.noopen:
         _open_project(args.directory, args.project, args.editor)
+
+
+def _open_with_editor(editor: Optional[str], path: str):
+    for editor_ in (editor, os.environ.get("EDITOR"), "vi", "vim"):
+        if editor_:
+            logging.info('Trying to open "%s" with "%s" editor', path, editor_)
+            try:
+                result = subprocess.run([editor_, path], check=False)
+            except OSError as exc:
+                logging.error('Failed to open "%s" with "%s": %s', path, editor_, exc)
+            else:
+                if result.returncode == 0:
+                    break
+    else:
+        raise ScriptError(f'No suitable editor found to open "{path}"')
 
 
 def _open_project(directory, project, editor):
@@ -176,19 +182,22 @@ def _open_project(directory, project, editor):
             f'No project named "{project}" found under your working directory'
         )
 
-    for editor_ in (editor, os.environ.get("EDITOR"), "vi", "vim"):
-        if editor_:
-            logging.info(
-                'Trying to open "%s" with "%s" editor', project, editor_
-            )
-            try:
-                result = subprocess.run([editor_, project_dir], check=False)
-            except OSError as exc:
-                logging.error(
-                    'Failed to open "%s" with "%s": %s', project, editor_, exc
-                )
-            else:
-                if result.returncode == 0:
-                    break
-    else:
-        raise ScriptError(f'No suitable editor found to open "{project}"')
+    _open_with_editor(editor, project_dir)
+
+
+def config(args):
+    """Handle `config` command.
+
+    Create config directory and opens an editor to modify the config.
+    """
+    logging.debug('Creating config directory "%s"', _CONFIG_DIR)
+    os.makedirs(_CONFIG_DIR, exist_ok=True)
+
+    if not os.path.exists(_CONFIG_PATH):
+        logging.debug('Copying config template to "%s"', _CONFIG_PATH)
+        shutil.copy(
+            pkg_resources.resource_filename("git_workon", "config.json"),
+            _CONFIG_PATH,
+        )
+
+    _open_with_editor(args.editor, _CONFIG_PATH)

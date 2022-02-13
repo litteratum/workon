@@ -4,6 +4,8 @@
 /build
 /_build
 dist
+.tox
+.python-version
 
 # tests coverage
 .coverage

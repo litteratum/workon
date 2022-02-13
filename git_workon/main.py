@@ -23,13 +23,15 @@ def main():
             script.start(args)
         elif args.command == "done":
             script.done(args)
+        elif args.command == "config":
+            script.config(args)
     except KeyboardInterrupt:
         logging.info("\nCanceled by user")
         sys.exit(0)
     except script.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)
-    except Exception as exc:
+    except Exception as exc:  # pylint:disable=broad-except
         logging.error("Unexpected script error: %s", exc)
         sys.exit(2)
 

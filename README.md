@@ -18,6 +18,54 @@ pip install git-workon
 
 ## Usage
 
+## Configuration
+
+The script commands can be fully controlled by CLI arguments, but it is much convenient to have a configuration file
+defining most of parameters. There is a special `config` command that will help you to prepare suitable configuration.
+
+```bash
+gw config [options]
+```
+
+This command will:
+
+* Create configuration directory if it does not exist. It will use OS-specific config directory, e.g.
+  `~/.config/git_workon` for Linux
+* Copy template configuration file to the configuration directory if it does not exist
+* Open the configuration file with suitable editor. See below how is editor chosen
+
+The configuration file is a simple JSON contains the following parameters:
+
+* `source` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
+  Example:
+
+  ```json
+  "source": [
+    "https://github.com/<my_username>",
+    "git@github.com:<my_username>"
+  ]
+  ```
+
+  May be overridden by `-s/--source` argument. You can also define multiple sources: `-s first second -s third`
+* `dir` - the working directory. All projects will be cloned to this directory. May be overridden by `-d/--directory`
+  argument. `~` in path is supported
+* `editor` - the editor used to open a cloned project or the configuration. May be overridden by `-e/--editor` argument.
+  If not specified and `-e/--editor` argument is not provided, the script will try to use the editor specified by
+  `$EDITOR` environment variable. If that variable is not set, the script will try `vi` and `vim` consequently
+
+Configuration example:
+
+```json
+{
+  "dir": "~/git_workon",
+  "editor": "vim",
+  "source": [
+    "https://github.com/pallets",
+    "https://github.com/pypa"
+  ]
+}
+```
+
 ### Start to work on a project
 
 When it is time to work on some project, use the `start` command:
@@ -29,7 +77,7 @@ gw start <my_project> [options]
 This command will:
 
 * If the project with a given name already exists in the working directory:
-  * opens it with a configured editor
+  * open it with a configured editor
 * If the project with a given name does not exist:
   * clone it from git sources into the working directory
   * open the project with a configured editor
@@ -60,42 +108,7 @@ folders containing ".git" will be checked for unpushed entities).
 
 See `gw done --help` for other available options on how to control the command.
 
-## Configuration
-
-The script commands can be fully controlled by CLI arguments, but it is much convenient to adjust the configuration
-file located under `~/.config/git_workon/config.json`:
-
-* `source` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
-  Example:
-
-  ```json
-  "source": [
-    "https://github.com/<my_username>",
-    "git@github.com:<my_username>"
-  ]
-  ```
-
-  May be overridden by `-s/--source` argument. You can also define multiple sources: `-s first second -s third`
-* `dir` - the working directory. All projects will be cloned to this directory. May be overridden by `-d/--directory`
-  argument. `~` in path is supported
-* `editor` - the editor used to open a cloned project. May be overridden by `-e/--editor` argument. If not
-  specified and `-e/--editor` argument is not provided, the script will try to use the editor specified by `$EDITOR`
-  environment variable. If that variable is not set, the script will try `vi` and `vim` consequently
-
-Configuration example:
-
-```json
-{
-  "dir": "~/_workon",
-  "editor": "vim",
-  "source": [
-    "https://github.com/pallets",
-    "https://github.com/pypa"
-  ]
-}
-```
-
-### Bash completions
+## Bash completions
 
 Implemented as a bash script `workon_completions`. Currently, it adds completions only for basic commands.
 To enable completions, simply copy the script to `/etc/bash_completion.d/` or copy it anywhere and source when you

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [1.3.0] - 2022-02-13
+### Added
+* `config` command
+* `poetry` integration
+* `tox` integration
+* Integrate and improve linting
+
+### Removed
+* Config template copy on installation
+
+
 ## [1.2.5] - 2022-02-12
 ### Fixed
 * Strip a project name to support command like `gw done project/`
