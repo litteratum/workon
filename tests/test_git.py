@@ -57,6 +57,14 @@ class TmpGitDir:
         shutil.rmtree(self.path)
 
 
+def test_is_git_dir():
+    with TmpGitDir() as git_dir:
+        assert git.is_git_dir(git_dir.path)
+
+    with tempfile.TemporaryDirectory() as tmp_dir_path:
+        assert not git.is_git_dir(tmp_dir_path)
+
+
 def test_get_stash_info_returns_empty_str_if_no_stash():
     with TmpGitDir() as git_repo:
         assert git.get_stash_info(git_repo.path) == ""

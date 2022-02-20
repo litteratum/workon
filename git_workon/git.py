@@ -1,5 +1,6 @@
 """Module for interaction with GIT."""
 import logging
+import os
 import subprocess
 
 
@@ -15,6 +16,11 @@ def _run_command(
     return subprocess.run(
         command.split(), cwd=cwd, capture_output=True, text=True, check=check
     )
+
+
+def is_git_dir(directory: str) -> bool:
+    """Return whether a directory is GIT initialized directory."""
+    return ".git" in os.listdir(directory)
 
 
 def get_stash_info(directory: str):

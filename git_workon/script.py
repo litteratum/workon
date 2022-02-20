@@ -79,7 +79,7 @@ def _remove_project(project, directory, force):
     logging.info('Finishing up "%s"', project)
     proj_path = os.path.join(directory, project)
 
-    if ".git" not in os.listdir(proj_path):
+    if not git.is_git_dir(proj_path):
         logging.debug('Not a GIT repository, removing "%s"', proj_path)
         shutil.rmtree(proj_path)
         return
