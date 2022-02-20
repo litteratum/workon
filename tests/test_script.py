@@ -1,6 +1,5 @@
 """Tests for script.py."""
 # pylint:disable=missing-function-docstring
-import json
 import os
 import tempfile
 from argparse import Namespace
@@ -267,51 +266,6 @@ def test_start_project_exists_should_be_opened(mc_open_project):
             args.directory, args.project, args.editor  # pylint:disable=no-member
         )
 
-
-def test_get_config():
-    config = {"dir": "some"}
-    with tempfile.NamedTemporaryFile("w+") as file:
-        json.dump(config, file)
-        file.flush()
-
-        with patch("git_workon.script._CONFIG_PATH", file.name):
-            assert script.get_config() == config
-
-
-def test_get_config_no_config_file():
-    with patch("git_workon.script._CONFIG_PATH", "nonexistent"):
-        assert script.get_config() == {}
-
-
-def test_get_config_wrong_json_file():
-    with tempfile.NamedTemporaryFile("w+") as file:
-        file.write("oops")
-        file.flush()
-
-        with patch("git_workon.script._CONFIG_PATH", file.name):
-            assert script.get_config() == {}
-
-
-@pytest.mark.parametrize(
-    "whats_wrong",
-    [
-        "dir",
-        "editor",
-        "source",
-    ],
-)
-def test_get_config_invalid_config(whats_wrong):
-    config = {"dir": "some", "source": ["some"], "editor": "some", whats_wrong: 1}
-
-    with tempfile.NamedTemporaryFile("w+") as file:
-        json.dump(config, file)
-        file.flush()
-
-        with patch("git_workon.script._CONFIG_PATH", file.name):
-            with pytest.raises(ScriptError):
-                script.get_config()
-
-
 @patch("git_workon.script.subprocess")
 def test_config_command_creates_config_dir(mc_subprocess):
     mc_subprocess.run.return_value = Mock(returncode=0)
@@ -320,8 +274,7 @@ def test_config_command_creates_config_dir(mc_subprocess):
         config_path = os.path.join(config_dir, "config.json")
         assert not os.path.exists(config_dir)
 
-        with patch.object(script, "_CONFIG_DIR", config_dir):
-            with patch.object(script, "_CONFIG_PATH", config_path):
-                script.config(Namespace(editor="vi"))
+        with patch.object(script, "CONFIG_PATH", config_path):
+            script.config(Namespace(editor="vi"))
 
         assert os.path.exists(config_path)

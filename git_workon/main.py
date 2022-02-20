@@ -2,7 +2,7 @@
 import logging
 import sys
 
-from . import cli, script
+from . import cli, config, script
 
 
 def init_logger(verbose):
@@ -15,7 +15,7 @@ def init_logger(verbose):
 def main():
     """Execute the script commands."""
     try:
-        user_config = script.get_config()
+        user_config = config.get_config(script.CONFIG_PATH)
         args = cli.parse_args(user_config)
         init_logger(args.verbose)
 
@@ -28,6 +28,8 @@ def main():
     except KeyboardInterrupt:
         logging.info("\nCanceled by user")
         sys.exit(0)
+    except config.ConfigError as exc:
+        logging.error("Configuration error: %s", exc)
     except script.ScriptError as exc:
         logging.error(exc)
         sys.exit(1)
