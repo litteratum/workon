@@ -2,9 +2,12 @@
 import json
 import logging
 import os
-import shutil
 
-import pkg_resources
+_CONFIG_TEMPLATE = {
+    "dir": "~/git_workon",
+    "editor": "",
+    "source": [],
+}
 
 
 class ConfigError(Exception):
@@ -45,5 +48,6 @@ def init_config(path: str) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
     if not os.path.exists(path):
-        logging.debug('Copying config template to "%s"', path)
-        shutil.copy(pkg_resources.resource_filename("git_workon", "config.json"), path)
+        logging.debug('Writing configuration template to "%s"', path)
+        with open(path, "w", encoding="utf8") as file:
+            json.dump(_CONFIG_TEMPLATE, file, indent=2)
