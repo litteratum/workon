@@ -65,86 +65,80 @@ def test_is_git_dir():
         assert not git.is_git_dir(tmp_dir_path)
 
 
-def test_get_stash_info_returns_empty_str_if_no_stash():
+def test_check_all_pushed_everything_is_pushed_returns_none():
+    """If everything is pushed, the function should return None."""
     with TmpGitDir() as git_repo:
-        assert git.get_stash_info(git_repo.path) == ""
+        with patch("git_workon.git.subprocess.run") as mc_run:
+            mc_run.return_value = Mock(stderr="Everything up-to-date", stdout="")
+            assert git.check_all_pushed(git_repo.path) is None
 
 
-def test_get_stash_info_returns_info_when_there_is_some_stash():
+def test_check_all_pushed_there_is_some_stash_raises_exception():
+    """If everything is pushed, the function should return None."""
     with TmpGitDir(initial_commit=True) as git_dir:
         os.mknod(os.path.join(git_dir.path, "1.txt"))
         git_dir.stash()
         pattern = r"stash@\{0\}: WIP on master: .+? dummy"
-        assert re.match(pattern, git.get_stash_info(git_dir.path))
+
+        with pytest.raises(git.GITError) as exc:
+            git.check_all_pushed(git_dir.path)
+        assert re.search(pattern, str(exc.value))
 
 
-def test_get_stash_info_not_a_git_repo_returns_empty_str():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        assert git.get_stash_info(tmp_dir_path) == ""
-
-
-def test_get_unpushed_branches_info_no_unpushed_returns_empty_str():
-    with TmpGitDir() as git_dir:
-        assert git.get_unpushed_branches_info(git_dir.path) == ""
-
-
-def test_get_unpushed_branches_info_with_unpushed_returns_info():
+def test_check_all_pushed_branch_raises_exception():
     with TmpGitDir(initial_commit=True) as git_dir:
         git_dir.checkout("test")
         os.mknod(os.path.join(git_dir.path, "1.txt"))
         git_dir.add()
         git_dir.commit("example")
 
-        info = git.get_unpushed_branches_info(git_dir.path)
-        assert "(master) dummy" in info
-        assert "(HEAD -> test) example" in info
+        with pytest.raises(git.GITError) as exc:
+            git.check_all_pushed(git_dir.path)
+        assert "(master) dummy" in str(exc.value)
+        assert "(HEAD -> test) example" in str(exc.value)
 
 
-def test_get_unpushed_branches_info_not_a_git_repo():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        assert git.get_unpushed_branches_info(tmp_dir_path) == ""
-
-
-def test_get_unstaged_info_no_unstaged_returns_empty_str():
-    with TmpGitDir() as git_dir:
-        assert git.get_unstaged_info(git_dir.path) == ""
-
-
-def test_get_unstaged_info_not_a_git_repo():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        assert git.get_unstaged_info(tmp_dir_path) == ""
-
-
-def test_get_unstaged_info_with_unstaged_returns_info():
+def test_check_all_pushed_with_unstaged_returns_info():
     with TmpGitDir(initial_commit=True) as git_dir:
         git_dir.checkout("test")
         os.mknod(os.path.join(git_dir.path, "1.txt"))
 
-        info = git.get_unstaged_info(git_dir.path)
-        assert "?? 1.txt\n" in info
+        with pytest.raises(git.GITError) as exc:
+            git.check_all_pushed(git_dir.path)
+        assert "?? 1.txt\n" in str(exc.value)
 
 
-def test_get_unpushed_tags_not_a_git_repo():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        assert "Failed to check unpushed tags" in git.get_unpushed_tags(tmp_dir_path)
-
-
-def test_get_unpushed_tags_no_remote_returns_empty_str():
+def test_check_all_pushed_tags_no_remote_raises_exception():
     with TmpGitDir() as git_dir:
-        assert "Failed to check unpushed tags" in git.get_unpushed_tags(git_dir.path)
+        with pytest.raises(git.GITError) as exc:
+            git.check_all_pushed(git_dir.path)
+        assert "Failed to check unpushed tags" in str(exc.value)
 
 
-@patch("git_workon.git.subprocess.run")
-def test_get_unpushed_tags_with_unpushed_returns_info(mc_run):
-    mc_run.return_value = Mock(stderr="* [new tag]         1.1.0 -> 1.1.0")
-    info = git.get_unpushed_tags("")
-    assert "1.1.0 -> 1.1.0" in info
+def test_check_all_pushed_tags_with_unpushed_raises_exception():
+    with TmpGitDir(initial_commit=True) as git_dir:
+        with patch("git_workon.git.subprocess.run") as mc_run:
+            mc_run.return_value = Mock(
+                stderr="* [new tag]         1.1.0 -> 1.1.0", stdout=""
+            )
+            with pytest.raises(git.GITError) as exc:
+                git.check_all_pushed(git_dir.path)
+            assert "1.1.0 -> 1.1.0" in str(exc.value)
 
 
-@patch("git_workon.git.subprocess.run")
-def test_get_unpushed_tags_no_unpushed_returns_empty_str(mc_run):
-    mc_run.return_value = Mock(stderr="Everything up-to-date")
-    assert git.get_unpushed_tags("") == ""
+def test_check_all_all_entities_are_unpushed_raises_exception():
+    with TmpGitDir(initial_commit=True) as git_dir:
+        with patch("git_workon.git.subprocess.run") as mc_run:
+            mc_run.side_effect = [
+                Mock(stdout="?? 1.txt\n"),
+                Mock(stdout="stash{0}"),
+                Mock(stdout="(master) dummy\n(HEAD -> test) example"),
+                Mock(stderr="* [new tag]         1.1.0 -> 1.1.0", stdout=""),
+            ]
+            with pytest.raises(git.GITError) as exc:
+                git.check_all_pushed(git_dir.path)
+            for entity in "Stashes", "Commits", "Not staged", "Tags":
+                assert entity in str(exc.value)
 
 
 @patch("git_workon.git.subprocess.run")

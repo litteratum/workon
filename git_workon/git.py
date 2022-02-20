@@ -23,13 +23,13 @@ def is_git_dir(directory: str) -> bool:
     return ".git" in os.listdir(directory)
 
 
-def get_stash_info(directory: str):
+def _get_stash_info(directory: str):
     """Return stash info under `directory`."""
-    logging.info('Checking GIT stashes under "%s"', directory)
+    logging.info('Checking for unpushed GIT stashes under "%s"', directory)
     return _run_command("git stash list", cwd=directory).stdout
 
 
-def get_unpushed_branches_info(directory: str) -> str:
+def _get_unpushed_branches_info(directory: str) -> str:
     """Return information about unpushed branches.
 
     Format is: <commit> (<branch>) <commit_message>
@@ -40,13 +40,13 @@ def get_unpushed_branches_info(directory: str) -> str:
     ).stdout
 
 
-def get_unstaged_info(directory: str) -> str:
+def _get_unstaged_info(directory: str) -> str:
     """Return information about unstaged changes."""
     logging.info('Checking for unstaged changes under "%s"', directory)
     return _run_command("git status --short", cwd=directory).stdout
 
 
-def get_unpushed_tags(directory: str) -> str:
+def _get_unpushed_tags(directory: str) -> str:
     """Return unpushed tags.
 
     If no tags found, returns an empty string.
@@ -65,6 +65,37 @@ def get_unpushed_tags(directory: str) -> str:
     if "new tag" not in info:
         return ""
     return info
+
+
+def check_all_pushed(directory: str) -> None:
+    """Check if everything from GIT directory is pushed.
+
+    It checks:
+      * stashes
+      * branches
+      * unstaged
+      * tags
+
+    :raises: `GITError` if there is something unpushed. Error message contains
+      information about unpushed entities
+    """
+    unstaged = _get_unstaged_info(directory)
+    stashes = _get_stash_info(directory)
+    branches = _get_unpushed_branches_info(directory)
+    tags = _get_unpushed_tags(directory)
+
+    if any([unstaged, stashes, branches, tags]):
+        output = ""
+        if stashes:
+            output += f"Stashes:\n{stashes}"
+        if branches:
+            output += f"\nCommits:\n{branches}"
+        if unstaged:
+            output += f"\nNot staged:\n{unstaged}"
+        if tags:
+            output += f"\nTags:\n{tags}"
+
+        raise GITError(output)
 
 
 def clone(source: str, destination: str):

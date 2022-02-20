@@ -7,7 +7,7 @@ from argparse import Namespace
 from unittest.mock import Mock, patch
 
 import pytest
-from git_workon import script
+from git_workon import git, script
 from git_workon.script import ScriptError
 
 
@@ -38,7 +38,7 @@ def test_done_nonexistent_dir(specific):
         script.done(args)
 
 
-@patch("git_workon.script.git.get_unpushed_tags", Mock(return_value=""))
+@patch("git_workon.script.git.check_all_pushed", Mock(return_value=None))
 def test_done_project_found_and_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -49,7 +49,7 @@ def test_done_project_found_and_removed():
         assert not os.path.exists(proj_path)
 
 
-@patch("git_workon.script.git.get_unpushed_tags", Mock(return_value=""))
+@patch("git_workon.script.git.check_all_pushed", Mock(return_value=None))
 def test_done_all_filetypes_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         # project dir
@@ -68,8 +68,11 @@ def test_done_all_filetypes_removed():
         assert not os.listdir(tmp_dir_path)
 
 
-@patch("git_workon.script.git.get_stash_info", Mock(return_value="stash"))
-def test_done_project_found_git_stashed_error_raised():
+@patch(
+    "git_workon.script.git.check_all_pushed",
+    Mock(side_effect=git.GITError("something")),
+)
+def test_done_project_found_something_unpushed_error_raised():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = add_git_project(tmp_dir_path)
 
@@ -81,7 +84,7 @@ def test_done_project_found_git_stashed_error_raised():
         assert os.path.exists(proj_path)
 
 
-@patch("git_workon.script.git.get_stash_info", Mock(return_value="stash"))
+@patch("git_workon.script.git.check_all_pushed", Mock(return_value="something"))
 def test_done_project_found_git_stashed_forced_ok():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
@@ -93,96 +96,7 @@ def test_done_project_found_git_stashed_forced_ok():
         assert not os.path.exists(proj_path)
 
 
-@patch("git_workon.script.git.get_unpushed_branches_info", Mock(return_value="oops"))
-def test_done_project_found_git_unpushed_error_raised():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = add_git_project(tmp_dir_path)
-
-        args = Namespace(
-            project=os.path.basename(proj_path), directory=tmp_dir_path, force=False
-        )
-        with pytest.raises(ScriptError) as exc:
-            script.done(args)
-        assert "oops" in str(exc.value)
-        assert os.path.exists(proj_path)
-
-
-@patch("git_workon.script.git.get_unpushed_branches_info", Mock(return_value="oops"))
-def test_done_project_found_git_unpushed_forced_ok():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
-
-        args = Namespace(
-            project=os.path.basename(proj_path), directory=tmp_dir_path, force=True
-        )
-        script.done(args)
-        assert not os.path.exists(proj_path)
-
-
-@patch("git_workon.script.git.get_unstaged_info", Mock(return_value="oops"))
-def test_done_project_found_git_unstaged():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = add_git_project(tmp_dir_path)
-
-        args = Namespace(
-            project=os.path.basename(proj_path), directory=tmp_dir_path, force=False
-        )
-        with pytest.raises(ScriptError) as exc:
-            script.done(args)
-        assert "oops" in str(exc.value)
-        assert os.path.exists(proj_path)
-
-
-@patch("git_workon.script.git.get_unstaged_info", Mock(return_value="oops"))
-def test_done_project_found_git_unstaged_forced_ok():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = tempfile.mkdtemp(dir=tmp_dir_path)
-
-        args = Namespace(
-            project=os.path.basename(proj_path), directory=tmp_dir_path, force=True
-        )
-        script.done(args)
-        assert not os.path.exists(proj_path)
-
-
-@patch("git_workon.script.git.get_stash_info")
-@patch("git_workon.script.git.get_unpushed_branches_info")
-@patch("git_workon.script.git.get_unstaged_info")
-@patch("git_workon.script.git.get_unpushed_tags")
-def test_done_project_found_all_unpushed(mc_tags, mc_unstaged, mc_unpushed, mc_stashed):
-    unstaged = "M somefile.txt"
-    unpushed = "hash (branch1) message"
-    stashed = "stash1\nstash2"
-    tags = (
-        "To github.com:user/proj.git\n* [new tag]         1.1.0 -> 1.1.0\n"
-        "* [new tag]         1.2 -> 1.2"
-    )
-
-    mc_unstaged.return_value = unstaged
-    mc_unpushed.return_value = unpushed
-    mc_stashed.return_value = stashed
-    mc_tags.return_value = tags
-
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        proj_path = add_git_project(tmp_dir_path)
-
-        args = Namespace(
-            project=os.path.basename(proj_path), directory=tmp_dir_path, force=False
-        )
-        with pytest.raises(ScriptError) as exc:
-            script.done(args)
-
-        for message in (
-            unstaged,
-            unpushed,
-            stashed,
-            tags,
-        ):
-            assert message in str(exc.value)
-        assert os.path.exists(proj_path)
-
-
-@patch("git_workon.script.git.get_unpushed_tags", Mock(return_value=""))
+@patch("git_workon.script.git.check_all_pushed", Mock(return_value=None))
 def test_done_all_projects_removed():
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         for _ in range(2):
@@ -194,12 +108,11 @@ def test_done_all_projects_removed():
         assert len(os.listdir(tmp_dir_path)) == 0
 
 
-@patch("git_workon.script.git.get_stash_info")
-@patch("git_workon.script.git.get_unpushed_tags", Mock(return_value=""))
+@patch("git_workon.script.git.check_all_pushed")
 def test_done_all_projects_couple_are_dirty_but_all_tried_to_be_removed(
-    mc_get_stash_info,
+    mc_check_all_pushed,
 ):
-    mc_get_stash_info.side_effect = (ScriptError, "", ScriptError, "")
+    mc_check_all_pushed.side_effect = (git.GITError, None, git.GITError, None)
 
     with tempfile.TemporaryDirectory() as tmp_dir_path:
         for _ in range(4):

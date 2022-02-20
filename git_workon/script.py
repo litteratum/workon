@@ -84,36 +84,16 @@ def _remove_project(project, directory, force):
         shutil.rmtree(proj_path)
         return
 
-    stashed = git.get_stash_info(proj_path)
-    unpushed = git.get_unpushed_branches_info(proj_path)
-    unstaged = git.get_unstaged_info(proj_path)
-    tags = git.get_unpushed_tags(proj_path)
-
-    if force or not any(
-        [
-            stashed,
-            unpushed,
-            unstaged,
-            tags,
-        ]
-    ):
-        logging.debug('Removing "%s"', proj_path)
-        shutil.rmtree(proj_path)
-        return
-
-    output = "Failed. There are some unpushed changes or problems! See below\n"
-    if stashed:
-        output += f"\nStashes:\n{stashed}"
-    if unpushed:
-        output += f"\nCommits:\n{unpushed}"
-    if unstaged:
-        output += f"\nNot staged:\n{unstaged}"
-    if tags:
-        output += f"\nTags:\n{tags}"
-
-    output += '\nPush your local changes or use "-f" flag to drop them'
-
-    raise ScriptError(output)
+    try:
+        if force or git.check_all_pushed(proj_path) is None:
+            logging.debug('Removing "%s"', proj_path)
+            shutil.rmtree(proj_path)
+    except git.GITError as exc:
+        raise ScriptError(
+            f"Failed. There are some unpushed changes or problems! See below\n\n"
+            f"{exc}\n"
+            f'Push your local changes or use "-f" flag to drop them'
+        ) from exc
 
 
 def start(args):
@@ -136,14 +116,7 @@ def start(args):
 
     for i, source in enumerate(args.source, start=1):
         project_path = source.strip("/") + "/" + args.project + ".git"
-        destination = args.directory + f"/{args.project}"
-
-        logging.info(
-            'Cloning "%s" from "%s" into "%s"',
-            args.project,
-            project_path,
-            destination,
-        )
+        destination = f'{args.directory}/{args.project}'
 
         try:
             git.clone(project_path, destination)
@@ -151,7 +124,7 @@ def start(args):
         except git.GITError as exc:
             if i == len(args.source):
                 raise ScriptError(
-                    f'Failed to clone "{args.project}". Tried all configured ' "sources"
+                    f'Failed to clone "{args.project}". Tried all configured sources'
                 ) from exc
             logging.debug(exc)
 
