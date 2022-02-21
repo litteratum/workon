@@ -1,171 +1,308 @@
-"""Tests for cli.py."""
-# pylint:disable=missing-function-docstring
+"""Tests or cli.py."""
+# pylint:disable=missing-function-docstring, no-self-use
 import os
 import sys
 import tempfile
-from argparse import Namespace
+from unittest import TestCase
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from git_workon import cli
-from git_workon.script import ScriptError
+from git_workon import cli, config, workon
 
 
-def test_parse_args_no_args():
-    sys.argv = ["git_workon"]
-    with pytest.raises(SystemExit):
-        cli.parse_args(user_config={})
+class TestBase(TestCase):
+    """Base tester for CLI."""
 
+    def setUp(self) -> None:
+        self.mc_clone = MagicMock()
+        self.mc_open = MagicMock()
+        self.mc_remove = MagicMock()
 
-def test_parse_args_command_no_args():
-    sys.argv = ["git_workon", "start", "my_project"]
-
-    with pytest.raises(ScriptError):
-        cli.parse_args(user_config={})
-
-    sys.argv = ["git_workon", "done"]
-    with pytest.raises(ScriptError):
-        cli.parse_args(user_config={})
-
-
-def test_parse_args_project_name_stripped():
-    """Test that a project name is stripped."""
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        sys.argv = [
-            "git_workon",
-            "start",
-            " my_project/ ",
-            "-d",
-            tmp_dir_path,
-            "-s",
-            "some",
-        ]
-
-        assert cli.parse_args({}) == Namespace(
-            command="start",
-            directory=tmp_dir_path,
-            source=["some"],
-            verbose=0,
-            project="my_project",
-            noopen=False,
-            editor=None,
+        self.patch_clone = patch(
+            "git_workon.workon.WorkOnDir.clone",
+            new=self.mc_clone,
         )
-
-        sys.argv = ["git_workon", "done", " my_project/ ", "-d", tmp_dir_path]
-        assert cli.parse_args({}) == Namespace(
-            command="done",
-            directory=tmp_dir_path,
-            verbose=0,
-            project="my_project",
-            force=False,
+        self.patch_open = patch(
+            "git_workon.workon.WorkOnDir.open",
+            new=self.mc_open,
         )
-
-        sys.argv = ["git_workon", "done", "-d", tmp_dir_path]
-        assert cli.parse_args({}) == Namespace(
-            command="done", directory=tmp_dir_path, verbose=0, project=None, force=False
+        self.patch_remove = patch(
+            "git_workon.workon.WorkOnDir.remove",
+            new=self.mc_remove,
         )
+        for patch_ in self.patch_clone, self.patch_open, self.patch_remove:
+            patch_.start()
+        return super().setUp()
+
+    def tearDown(self) -> None:
+        for patch_ in self.patch_clone, self.patch_open, self.patch_remove:
+            patch_.stop()
+        return super().tearDown()
 
 
-def test_parse_args_start_command_no_args_config_variables_set():
-    sys.argv = ["git_workon", "start", "my_project"]
+class TestParseErrors(TestBase):
+    """Tests for args parsing errors."""
 
-    user_config = {"dir": "/tmp", "editor": "my_editor", "source": ["some"]}
-
-    assert cli.parse_args(user_config) == Namespace(
-        command="start",
-        directory="/tmp",
-        source=["some"],
-        verbose=0,
-        project="my_project",
-        noopen=False,
-        editor="my_editor",
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
     )
+    def test_no_args(self):
+        sys.argv = ["git_workon"]
+        with pytest.raises(SystemExit):
+            cli.main()
 
-
-def test_parse_args_start_command_source_extended_from_config():
-    sys.argv = ["git_workon", "start", "my_project", "-s", "some", "-s", "another"]
-
-    user_config = {"dir": "/tmp", "editor": "my_editor", "source": ["from_config"]}
-    expected_source = ["some", "another", "from_config"]
-
-    assert cli.parse_args(user_config) == Namespace(
-        command="start",
-        directory="/tmp",
-        source=expected_source,
-        verbose=0,
-        project="my_project",
-        noopen=False,
-        editor="my_editor",
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
     )
+    def test_parse_args_command_no_args(self):
+        sys.argv = ["git_workon", "start", "my_project"]
+
+        with pytest.raises(SystemExit) as exc:
+            cli.main()
+        assert int(str(exc.value)) == 2
+
+        sys.argv = ["git_workon", "done"]
+        with pytest.raises(SystemExit) as exc:
+            cli.main()
+        assert int(str(exc.value)) == 2
 
 
-def test_parse_args_cli_arg_overrides_config_variable():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        sys.argv = ["git_workon", "start", "my_project", "-d", tmp_dir_path, "-vv"]
+class TestStartCommand(TestBase):
+    """Tests for the start command."""
 
-        user_config = {"dir": "/tmp", "editor": "code", "source": ["some"]}
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_noopen_only_cloned(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "start",
+                "my_project",
+                "-d",
+                tmp_dir,
+                "-s",
+                "any",
+                "-n",
+            ]
+            cli.main()
 
-        assert cli.parse_args(user_config) == Namespace(
-            command="start",
-            directory=tmp_dir_path,
-            source=["some"],
-            verbose=2,
-            project="my_project",
-            noopen=False,
-            editor="code",
+        assert not self.mc_open.called
+        self.mc_clone.assert_called_once_with("my_project", ["any"])
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_cloned_and_opened(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "start",
+                "my_project",
+                "-d",
+                tmp_dir,
+                "-s",
+                "any",
+            ]
+            cli.main()
+
+        self.mc_clone.assert_called_once_with("my_project", ["any"])
+        self.mc_open.assert_called_once_with("my_project", None)
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_already_cloned_opened(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            project_name = os.path.basename(tempfile.mkdtemp(dir=tmp_dir))
+            sys.argv = [
+                "git_workon",
+                "start",
+                os.path.basename(project_name),
+                "-d",
+                tmp_dir,
+                "-s",
+                "any",
+            ]
+            cli.main()
+
+        assert not self.mc_clone.called
+        self.mc_open.assert_called_once_with(os.path.basename(project_name), None)
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_with_specified_editor(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "start",
+                "my_project",
+                "-d",
+                tmp_dir,
+                "-s",
+                "any",
+                "-e",
+                "code",
+            ]
+            cli.main()
+
+        self.mc_clone.assert_called_once_with("my_project", ["any"])
+        self.mc_open.assert_called_once_with("my_project", "code")
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_command_error(self):
+        self.mc_clone.side_effect = workon.CommandError("Oops")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = ["git_workon", "start", "my_project", "-d", tmp_dir, "-s", "any"]
+            with pytest.raises(SystemExit) as exc:
+                cli.main()
+            assert int(str(exc.value)) == 1
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_source_not_defined_exception_raised(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = ["git_workon", "start", "my_project", "-d", tmp_dir]
+            with pytest.raises(SystemExit) as exc:
+                cli.main()
+            assert int(str(exc.value)) == 2
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, sources=["third", "fourth"])),
+    )
+    def test_user_config_sources_used(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "start",
+                "my_project",
+                "-d",
+                tmp_dir,
+            ]
+            cli.main()
+        self.mc_clone.assert_called_once_with("my_project", ["third", "fourth"])
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, sources=["third", "fourth"])),
+    )
+    def test_user_config_is_extended_by_sources(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "start",
+                "my_project",
+                "-d",
+                tmp_dir,
+                "-s",
+                "first",
+                "-s",
+                "second",
+            ]
+            cli.main()
+        self.mc_clone.assert_called_once_with(
+            "my_project", ["first", "second", "third", "fourth"]
         )
 
 
-def test_directory_does_not_exist_created():
-    with tempfile.TemporaryDirectory() as tmp_dir_path:
-        specified_dir = f'{tmp_dir_path}/aa'
-        sys.argv = [
-            "git_workon",
-            "start",
-            "my_project",
-            "-d",
-            specified_dir,
-            "-vv",
-            "-s",
-            "some",
-        ]
+class TestDoneCommand(TestBase):
+    """Tests for the done command."""
 
-        cli.parse_args(user_config={})
-        assert os.path.isdir(specified_dir)
-
-
-def test_directory_does_not_exist_failed_to_create():
-    sys.argv = ["git_workon", "start", "my_project", "-d", "/a", "-vv"]
-
-    with pytest.raises(ScriptError):
-        cli.parse_args(user_config={})
-
-
-def test_directory_exists_permissions_not_sufficient():
-    tmp_dir_path = tempfile.mkdtemp()
-
-    sys.argv = ["git_workon", "start", "my_project", "-d", tmp_dir_path, "-vv"]
-    os.chmod(tmp_dir_path, 0o000)
-
-    with pytest.raises(ScriptError):
-        cli.parse_args(user_config={})
-
-
-def test_parse_args_directory_path_expanded():
-    sys.argv = ["git_workon", "start", "my_project"]
-
-    user_config = {"dir": "~", "editor": "my_editor", "source": ["some"]}
-
-    assert cli.parse_args(user_config) == Namespace(
-        command="start",
-        directory=os.environ.get("HOME"),
-        source=["some"],
-        verbose=0,
-        project="my_project",
-        noopen=False,
-        editor="my_editor",
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
     )
+    def test_one_project(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "done",
+                "my_project",
+                "-d",
+                tmp_dir,
+            ]
+            cli.main()
+
+        assert not self.mc_clone.called
+        assert not self.mc_open.called
+        self.mc_remove.assert_called_once_with("my_project", False)
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_one_project_name_stripped(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "done",
+                "my_project/",
+                "-d",
+                tmp_dir,
+            ]
+            cli.main()
+
+        assert not self.mc_clone.called
+        assert not self.mc_open.called
+        self.mc_remove.assert_called_once_with("my_project", False)
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_all_projects(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "done",
+                "-d",
+                tmp_dir,
+            ]
+            cli.main()
+
+        assert not self.mc_clone.called
+        assert not self.mc_open.called
+        self.mc_remove.assert_called_once_with(None, False)
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_command_error(self):
+        self.mc_remove.side_effect = workon.CommandError("Oops")
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = [
+                "git_workon",
+                "done",
+                "-d",
+                tmp_dir,
+            ]
+            with pytest.raises(SystemExit) as exc:
+                cli.main()
+            assert int(str(exc.value)) == 1
 
 
-def test_config_command():
-    sys.argv = ["git_workon", "config", "-e", "editor"]
-    assert cli.parse_args({}) == Namespace(command="config", verbose=0, editor="editor")
+class TestConfigCommand(TestBase):
+    """Tests for the config command."""
+
+    @patch("git_workon.config.load_config")
+    @patch("git_workon.config.init_config")
+    def test_initialize(self, mc_init_config, mc_load_config):
+        sys.argv = ["git_workon", "config"]
+        cli.main()
+
+        mc_init_config.assert_called_once_with()
+        assert mc_load_config.call_count == 2

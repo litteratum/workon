@@ -17,7 +17,7 @@ classifiers=[
 ]
 
 [tool.poetry.scripts]
-gw = 'git_workon.main:main'
+gw = 'git_workon.cli:main'
 
 [tool.poetry.dependencies]
 python = ">=3.7, <3.11"

@@ -32,15 +32,14 @@ This command will:
 * Create configuration directory if it does not exist. It will use OS-specific config directory, e.g.
   `~/.config/git_workon` for Linux
 * Copy template configuration file to the configuration directory if it does not exist
-* Open the configuration file with suitable editor. See below how is editor chosen
 
 The configuration file is a simple JSON contains the following parameters:
 
-* `source` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
+* `sources` - the array of sources from which projects will be cloned. Clone attempts will be done sequentially.
   Example:
 
   ```json
-  "source": [
+  "sources": [
     "https://github.com/<my_username>",
     "git@github.com:<my_username>"
   ]
@@ -59,7 +58,7 @@ Configuration example:
 {
   "dir": "~/git_workon",
   "editor": "vim",
-  "source": [
+  "sources": [
     "https://github.com/pallets",
     "https://github.com/pypa"
   ]
