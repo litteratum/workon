@@ -1,9 +1,16 @@
-"""Command Line Interface processing."""
+"""Command Line Interface for the GIT workon."""
 import argparse
-import os
+import logging
+import sys
 from dataclasses import dataclass
+from typing import List, Optional
 
-from .script import ScriptError
+from . import config as config_module
+from . import workon
+
+
+class CLIError(Exception):
+    """CLI error."""
 
 
 # pylint:disable=too-few-public-methods
@@ -24,7 +31,13 @@ class ArgParseArgument:
     keyword: dict
 
 
-def _append_start_command(subparsers, parent):
+def _append_args(parser, args: Optional[List[ArgParseArgument]]) -> None:
+    if args:
+        for arg in args:
+            parser.add_argument(*arg.positional, **arg.keyword)
+
+
+def _append_start_command(subparsers, parent, user_config: config_module.UserConfig):
     start_parser = subparsers.add_parser(
         "start",
         help="start your work on a project",
@@ -41,6 +54,7 @@ def _append_start_command(subparsers, parent):
         help="git source including username",
         action="extend",
         nargs="+",
+        required=user_config.sources is None,
     )
     start_parser.add_argument(
         "-n",
@@ -86,38 +100,21 @@ def _append_done_command(subparsers, parent):
 def _append_config_command(subparsers, parent):
     return subparsers.add_parser(
         "config",
-        help="alter the configuration",
+        help="init/show configuration",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=[parent],
         add_help=False,
     )
 
 
-def _parse_args(user_config):
+def _parse_args(user_config: config_module.UserConfig):
     parser = argparse.ArgumentParser()
-
     subparsers = parser.add_subparsers(
         dest="command",
         title="script commands",
         help="command to execute",
         required=True,
     )
-
-    directory_arg = ArgParseArgument(
-        positional=("-d", "--directory"),
-        keyword={
-            "help": "working directory",
-            "default": user_config.get("dir"),
-        },
-    )
-    editor_arg = ArgParseArgument(
-        positional=("-e", "--editor"),
-        keyword={
-            "help": "editor used to open a project/configuration",
-            "default": user_config.get("editor"),
-        },
-    )
-
     parent_parser = argparse.ArgumentParser()
     parent_parser.add_argument(
         "-v",
@@ -127,55 +124,120 @@ def _parse_args(user_config):
         help="get more information of what's going on",
     )
 
-    start_parser = _append_start_command(subparsers, parent_parser)
-    done_parser = _append_done_command(subparsers, parent_parser)
-    config_parser = _append_config_command(subparsers, parent_parser)
+    directory_arg = ArgParseArgument(
+        positional=("-d", "--directory"),
+        keyword={
+            "help": "working directory",
+            "default": user_config.dir,
+            "required": user_config.dir is None,
+        },
+    )
+    editor_arg = ArgParseArgument(
+        positional=("-e", "--editor"),
+        keyword={
+            "help": "editor used to open a project/configuration",
+            "default": user_config.editor,
+        },
+    )
 
-    for subparser in start_parser, done_parser:
-        subparser.add_argument(*directory_arg.positional, **directory_arg.keyword)
-    for subparser in config_parser, start_parser:
-        subparser.add_argument(*editor_arg.positional, **editor_arg.keyword)
+    start_parser = _append_start_command(subparsers, parent_parser, user_config)
+    done_parser = _append_done_command(subparsers, parent_parser)
+    _append_config_command(subparsers, parent_parser)
+
+    _append_args(
+        start_parser,
+        [
+            directory_arg,
+            editor_arg,
+        ],
+    )
+    _append_args(
+        done_parser,
+        [
+            directory_arg,
+        ],
+    )
 
     return parser.parse_args()
 
 
-def parse_args(user_config):
-    """Parse CLI args."""
-    args = _parse_args(user_config)
+def _init_logger(verbose):
+    level = logging.DEBUG if verbose >= 1 else logging.INFO
+    logging.basicConfig(level=level, format="%(message)s")
 
-    if hasattr(args, "directory"):
-        if not args.directory:
-            raise ScriptError(
-                "Working directory is not specified. Please see script --help"
-                " or the documentation to know how to configure the script"
-            )
-        args.directory = os.path.expanduser(args.directory)
 
-        try:
-            os.makedirs(args.directory, exist_ok=True)
-        except OSError as exc:
-            raise ScriptError("Failed to create working directory: {exc}") from exc
+def main():
+    """Execute the script commands."""
+    try:
+        user_config = config_module.load_config()
+        args = _parse_args(user_config)
+        _init_logger(args.verbose)
 
-        if not os.access(args.directory, os.R_OK) or not os.access(
-            args.directory, os.W_OK
-        ):
-            raise ScriptError(
-                "Oops. Specified working directory is not readable/writable"
-            )
+        FUNC_FOR_COMMAND[args.command](args, user_config)
+    except KeyboardInterrupt:
+        logging.info("\nCanceled by user")
+        sys.exit(0)
+    except config_module.ConfigError as exc:
+        logging.error("Configuration error: %s", exc)
+        sys.exit(1)
+    except workon.CommandError as exc:
+        logging.error("Command error: %s", exc)
+        sys.exit(1)
+    except Exception as exc:  # pylint:disable=broad-except
+        logging.error("Unexpected script error: %s", exc)
+        sys.exit(2)
 
-    if args.command == "start":
-        if user_config.get("source"):
-            if args.source:
-                args.source.extend(user_config["source"])
-            else:
-                args.source = user_config["source"]
 
-        if not args.source:
-            raise ScriptError(
-                "GIT source is not specified. Please see script --help or "
-                "the documentation to know how to configure the script"
-            )
-    if hasattr(args, "project") and args.project:
+def start(
+    args: argparse.Namespace,
+    user_config: config_module.UserConfig,
+) -> None:
+    """Process start command."""
+    workon_dir = workon.WorkOnDir(args.directory)
+
+    if user_config.sources:
+        if args.source:
+            args.source.extend(user_config.sources)
+        else:
+            args.source = user_config.sources
+
+    if args.project not in workon_dir:
+        workon_dir.clone(args.project, args.source)
+
+    if not args.noopen:
+        workon_dir.open(args.project, args.editor)
+
+
+# pylint:disable=unused-argument
+def done(
+    args: argparse.Namespace,
+    user_config: config_module.UserConfig,
+) -> None:
+    """Process done command."""
+    workon_dir = workon.WorkOnDir(args.directory)
+
+    if args.project:
         args.project = args.project.strip("/ ")
 
-    return args
+    workon_dir.remove(args.project, args.force)
+
+
+def config(
+    args: argparse.Namespace,
+    user_config: config_module.UserConfig,
+) -> None:
+    """Process config command."""
+    config_module.init_config()
+    logging.info(config_module.load_config())
+
+# pylint:enable=unused-argument
+
+
+FUNC_FOR_COMMAND = {
+    "start": start,
+    "done": done,
+    "config": config,
+}
+
+if __name__ == "__main__":
+    main()

@@ -18,7 +18,7 @@ test:
 
 .PHONY: testall
 testall:
-	pyenv local 3.6.15 3.8.12 3.9.10 3.10.2
+	pyenv local 3.8.12 3.9.10 3.10.2
 	tox -p
 
 .PHONY: clean

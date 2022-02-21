@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [2.0.0] - 2022-02-13
+### Changed
+* `config` command now does not open the configuration. Instead, it only inits and shows it
+
+### Refactored
+* Completely reorganized the codebase
+
+
 ## [1.3.0] - 2022-02-13
 ### Added
 * `config` command
