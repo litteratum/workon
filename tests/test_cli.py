@@ -7,7 +7,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from git_workon import cli, config, workon
+from git_workon import cli, config, git
 
 
 class TestBase(TestCase):
@@ -19,15 +19,15 @@ class TestBase(TestCase):
         self.mc_remove = MagicMock()
 
         self.patch_clone = patch(
-            "git_workon.workon.WorkOnDir.clone",
+            "git_workon.git.WorkingDir.clone",
             new=self.mc_clone,
         )
         self.patch_open = patch(
-            "git_workon.workon.WorkOnDir.open",
+            "git_workon.git.WorkingDir.open",
             new=self.mc_open,
         )
         self.patch_remove = patch(
-            "git_workon.workon.WorkOnDir.remove",
+            "git_workon.git.WorkingDir.remove",
             new=self.mc_remove,
         )
         for patch_ in self.patch_clone, self.patch_open, self.patch_remove:
@@ -161,7 +161,7 @@ class TestStartCommand(TestBase):
         Mock(return_value=config.UserConfig(None, None, None)),
     )
     def test_command_error(self):
-        self.mc_clone.side_effect = workon.CommandError("Oops")
+        self.mc_clone.side_effect = git.CommandError("Oops")
         with tempfile.TemporaryDirectory() as tmp_dir:
             sys.argv = ["git_workon", "start", "my_project", "-d", tmp_dir, "-s", "any"]
             with pytest.raises(SystemExit) as exc:
@@ -282,7 +282,7 @@ class TestDoneCommand(TestBase):
         Mock(return_value=config.UserConfig(None, None, None)),
     )
     def test_command_error(self):
-        self.mc_remove.side_effect = workon.CommandError("Oops")
+        self.mc_remove.side_effect = git.CommandError("Oops")
         with tempfile.TemporaryDirectory() as tmp_dir:
             sys.argv = [
                 "git_workon",

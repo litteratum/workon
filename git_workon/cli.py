@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from . import config as config_module
-from . import workon
+from . import git
 
 
 class CLIError(Exception):
@@ -180,7 +180,7 @@ def main():
     except config_module.ConfigError as exc:
         logging.error("Configuration error: %s", exc)
         sys.exit(1)
-    except workon.CommandError as exc:
+    except git.CommandError as exc:
         logging.error("Command error: %s", exc)
         sys.exit(1)
     except Exception as exc:  # pylint:disable=broad-except
@@ -193,7 +193,7 @@ def start(
     user_config: config_module.UserConfig,
 ) -> None:
     """Process start command."""
-    workon_dir = workon.WorkOnDir(args.directory)
+    workon_dir = git.WorkingDir(args.directory)
 
     if user_config.sources:
         if args.source:
@@ -214,7 +214,7 @@ def done(
     user_config: config_module.UserConfig,
 ) -> None:
     """Process done command."""
-    workon_dir = workon.WorkOnDir(args.directory)
+    workon_dir = git.WorkingDir(args.directory)
 
     if args.project:
         args.project = args.project.strip("/ ")
