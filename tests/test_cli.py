@@ -334,7 +334,7 @@ class TestShowCommand(TestBase):
     def test_show_no_check(self):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            sys.argv = ["git_workon", "show", "-d", tmp_dir]
+            sys.argv = ["git_workon", "show", "-d", tmp_dir, "-n"]
             cli.main()
 
             self.mc_show.assert_called_once_with(check_status=False)
@@ -346,7 +346,7 @@ class TestShowCommand(TestBase):
     def test_show_with_check(self):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
-            sys.argv = ["git_workon", "show", "-d", tmp_dir, "--check"]
+            sys.argv = ["git_workon", "show", "-d", tmp_dir]
             cli.main()
 
             self.mc_show.assert_called_once_with(check_status=True)

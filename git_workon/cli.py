@@ -125,9 +125,10 @@ def _append_show_command(subparsers, parent):
         add_help=False,
     )
     show_parser.add_argument(
-        "-c",
-        "--check",
-        help="also check project statuses",
+        "-n",
+        "--no-check",
+        dest="nocheck",
+        help="don't check projects status",
         action="store_true",
     )
     return show_parser
@@ -280,7 +281,7 @@ def handle_show_command(
 ) -> None:
     """Process show command."""
     workon_dir = git.WorkingDir(args.directory)
-    projects_info = workon_dir.show(check_status=args.check)
+    projects_info = workon_dir.show(check_status=not args.nocheck)
     logging.info(_build_projects_info_text(projects_info))
 
 

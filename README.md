@@ -117,7 +117,7 @@ To list all projects under the working directory, use `show` command:
 gw show [options]
 ```
 
-If you pass `-c/--check` flag to the command, it will check every project status and colorize the output according to it:
+This command will check every project status and colorize the output according to it:
 
 * Clean (everything is pushed) - green color
 * Dirty (something is not pushed) - yellow color
