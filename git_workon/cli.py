@@ -5,6 +5,8 @@ import sys
 from dataclasses import dataclass
 from typing import Iterator, List, Optional
 
+import termcolor
+
 from . import config as config_module
 from . import git
 
@@ -21,6 +23,13 @@ class ExtendAction(argparse.Action):
         items = getattr(namespace, self.dest) or []
         items.extend(values)
         setattr(namespace, self.dest, items)
+
+
+_COLOR_FOR_STATUS = {
+    git.ProjectStatus.CLEAN: "green",
+    git.ProjectStatus.DIRTY: "yellow",
+    git.ProjectStatus.UNDEFINED: "white",
+}
 
 
 @dataclass
@@ -255,13 +264,14 @@ def handle_config_command(
     logging.info(config_module.load_config())
 
 
-def _build_projects_info_text(
-    projects_info: Iterator[git.ProjectInfo], include_status: bool
-) -> str:
-    if not include_status:
-        return "\n".join(f"{info.name}" for info in projects_info)
-
-    return "\n".join(f"{info.name} ({info.status.value})" for info in projects_info)
+def _build_projects_info_text(projects_info: Iterator[git.ProjectInfo]) -> str:
+    return "\n".join(
+        termcolor.colored(
+            f"{info.name}",
+            _COLOR_FOR_STATUS[info.status or git.ProjectStatus.UNDEFINED],
+        )
+        for info in projects_info
+    )
 
 
 def handle_show_command(
@@ -271,7 +281,7 @@ def handle_show_command(
     """Process show command."""
     workon_dir = git.WorkingDir(args.directory)
     projects_info = workon_dir.show(check_status=args.check)
-    logging.info(_build_projects_info_text(projects_info, args.check))
+    logging.info(_build_projects_info_text(projects_info))
 
 
 # pylint:enable=unused-argument

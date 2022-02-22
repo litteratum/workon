@@ -22,6 +22,7 @@ gw = 'git_workon.cli:main'
 [tool.poetry.dependencies]
 python = ">=3.7, <3.11"
 appdirs = "^1.4.4"
+termcolor = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"
