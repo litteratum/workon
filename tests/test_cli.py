@@ -1,5 +1,5 @@
 """Tests or cli.py."""
-# pylint:disable=missing-function-docstring, no-self-use
+# pylint:disable=missing-function-docstring, no-self-use, too-many-instance-attributes
 import os
 import sys
 import tempfile
@@ -313,15 +313,15 @@ class TestConfigCommand(TestBase):
         assert mc_load_config.call_count == 2
 
 
-class TestListCommand(TestBase):
-    """Tests for the list command."""
+class TestShowCommand(TestBase):
+    """Tests for the show command."""
 
     @patch(
         "git_workon.config.load_config",
         Mock(return_value=config.UserConfig(None, None, None)),
     )
     def test_dir_is_not_specified_exit(self):
-        sys.argv = ["git_workon", "list"]
+        sys.argv = ["git_workon", "show"]
 
         with pytest.raises(SystemExit) as exc:
             cli.main()
@@ -331,10 +331,22 @@ class TestListCommand(TestBase):
         "git_workon.config.load_config",
         Mock(return_value=config.UserConfig(None, None, None)),
     )
-    def test_list_ok(self):
+    def test_show_no_check(self):
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             sys.argv = ["git_workon", "show", "-d", tmp_dir]
             cli.main()
 
-            self.mc_show.assert_called_once_with()
+            self.mc_show.assert_called_once_with(check_status=False)
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_show_with_check(self):
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = ["git_workon", "show", "-d", tmp_dir, "--check"]
+            cli.main()
+
+            self.mc_show.assert_called_once_with(check_status=True)

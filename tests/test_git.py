@@ -383,8 +383,32 @@ class TestShow(TestWorkingDirBase):
     """Tests for the show command."""
 
     def test_dir_is_empty_returns_empty_list(self):
-        assert not list(self.workon.show())
+        assert not list(self.workon.show(check_status=False))
 
     def test_one_project_returns_this_project_name(self):
         proj = self.add_git_project()
-        assert list(self.workon.show()) == [proj.name]
+        assert list(self.workon.show(check_status=False)) == [
+            git.ProjectInfo(name=proj.name, status=None)
+        ]
+
+    @patch("git_workon.git._get_unpushed_tags", Mock(return_value=""))
+    def test_check_status_project_is_clean(self):
+        proj = self.add_git_project()
+        assert list(self.workon.show(check_status=True)) == [
+            git.ProjectInfo(name=proj.name, status=git.ProjectStatus.CLEAN)
+        ]
+
+    def test_check_status_project_is_dirty(self):
+        proj = self.add_git_project()
+        assert list(self.workon.show(check_status=True)) == [
+            git.ProjectInfo(name=proj.name, status=git.ProjectStatus.DIRTY)
+        ]
+
+    @patch("git_workon.git._get_unpushed_tags", Mock(return_value=""))
+    def test_check_status_project_is_file(self):
+        path = os.path.join(self.directory, "some.txt")
+        os.mknod(path)
+
+        assert list(self.workon.show(check_status=True)) == [
+            git.ProjectInfo(name="some.txt", status=git.ProjectStatus.UNDEFINED)
+        ]

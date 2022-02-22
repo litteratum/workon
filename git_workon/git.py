@@ -4,7 +4,9 @@ import logging
 import os
 import shutil
 import subprocess
-from typing import Iterator, List
+from dataclasses import dataclass
+from enum import Enum
+from typing import Iterator, List, Optional
 
 
 class GITError(Exception):
@@ -13,6 +15,22 @@ class GITError(Exception):
 
 class CommandError(Exception):
     """Command error."""
+
+
+class ProjectStatus(Enum):
+    """GIT project status."""
+
+    CLEAN = "clean"
+    DIRTY = "dirty"
+    UNDEFINED = "undefined"
+
+
+@dataclass
+class ProjectInfo:
+    """GIT Project information."""
+
+    name: str
+    status: Optional[ProjectStatus]
 
 
 def _run_command(
@@ -27,12 +45,12 @@ def _run_command(
 
 def is_git_dir(directory: str) -> bool:
     """Return whether a directory is GIT initialized directory."""
-    return ".git" in os.listdir(directory)
+    return os.path.isdir(directory) and ".git" in os.listdir(directory)
 
 
 def _get_stash_info(directory: str):
     """Return stash info under `directory`."""
-    logging.info('Checking for unpushed GIT stashes under "%s"', directory)
+    logging.debug('Checking for unpushed GIT stashes under "%s"', directory)
     return _run_command("git stash list", cwd=directory).stdout
 
 
@@ -41,7 +59,7 @@ def _get_unpushed_branches_info(directory: str) -> str:
 
     Format is: <commit> (<branch>) <commit_message>
     """
-    logging.info('Checking for unpushed GIT commits under "%s"', directory)
+    logging.debug('Checking for unpushed GIT commits under "%s"', directory)
     return _run_command(
         "git log --branches --not --remotes --decorate --oneline", cwd=directory
     ).stdout
@@ -49,7 +67,7 @@ def _get_unpushed_branches_info(directory: str) -> str:
 
 def _get_unstaged_info(directory: str) -> str:
     """Return information about unstaged changes."""
-    logging.info('Checking for unstaged changes under "%s"', directory)
+    logging.debug('Checking for unstaged changes under "%s"', directory)
     return _run_command("git status --short", cwd=directory).stdout
 
 
@@ -60,7 +78,7 @@ def _get_unpushed_tags(directory: str) -> str:
     If failed to get tags information, returns a string containing error
     description.
     """
-    logging.info('Checking for unpushed tags under "%s"', directory)
+    logging.debug('Checking for unpushed tags under "%s"', directory)
 
     try:
         info = _run_command(
@@ -180,9 +198,23 @@ class WorkingDir:
         else:
             raise CommandError(f'No suitable editor found to open "{project_dir}"')
 
-    def show(self) -> Iterator[str]:
-        """Return dirs list."""
-        yield from self._dirs
+    def show(self, check_status: bool) -> Iterator[ProjectInfo]:
+        """Return information about GIT projects."""
+        for project in self._dirs:
+            yield ProjectInfo(
+                project, self._get_project_status(project) if check_status else None
+            )
+
+    def _get_project_status(self, project_name: str) -> ProjectStatus:
+        path = os.path.join(self.directory, project_name)
+        if not is_git_dir(path):
+            return ProjectStatus.UNDEFINED
+        try:
+            check_all_pushed(path)
+        except GITError:
+            return ProjectStatus.DIRTY
+        else:
+            return ProjectStatus.CLEAN
 
     def _remove_projects(self, force: bool = False) -> None:
         for project in self._dirs:

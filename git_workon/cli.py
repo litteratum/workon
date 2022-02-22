@@ -3,7 +3,7 @@ import argparse
 import logging
 import sys
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Iterator, List, Optional
 
 from . import config as config_module
 from . import git
@@ -108,13 +108,20 @@ def _append_config_command(subparsers, parent):
 
 
 def _append_show_command(subparsers, parent):
-    return subparsers.add_parser(
+    show_parser = subparsers.add_parser(
         "show",
         help="list projects under the working directory",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
         parents=[parent],
         add_help=False,
     )
+    show_parser.add_argument(
+        "-c",
+        "--check",
+        help="also check project statuses",
+        action="store_true",
+    )
+    return show_parser
 
 
 def _parse_args(user_config: config_module.UserConfig):
@@ -248,13 +255,23 @@ def handle_config_command(
     logging.info(config_module.load_config())
 
 
+def _build_projects_info_text(
+    projects_info: Iterator[git.ProjectInfo], include_status: bool
+) -> str:
+    if not include_status:
+        return "\n".join(f"{info.name}" for info in projects_info)
+
+    return "\n".join(f"{info.name} ({info.status.value})" for info in projects_info)
+
+
 def handle_show_command(
     args: argparse.Namespace,
     user_config: config_module.UserConfig,
 ) -> None:
     """Process show command."""
     workon_dir = git.WorkingDir(args.directory)
-    logging.info("\n".join(workon_dir.show()))
+    projects_info = workon_dir.show(check_status=args.check)
+    logging.info(_build_projects_info_text(projects_info, args.check))
 
 
 # pylint:enable=unused-argument
