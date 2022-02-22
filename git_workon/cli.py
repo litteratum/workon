@@ -3,10 +3,12 @@ import argparse
 import logging
 import sys
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import Iterator, List, Optional
+
+import termcolor
 
 from . import config as config_module
-from . import workon
+from . import git
 
 
 class CLIError(Exception):
@@ -21,6 +23,13 @@ class ExtendAction(argparse.Action):
         items = getattr(namespace, self.dest) or []
         items.extend(values)
         setattr(namespace, self.dest, items)
+
+
+_COLOR_FOR_STATUS = {
+    git.ProjectStatus.CLEAN: "green",
+    git.ProjectStatus.DIRTY: "yellow",
+    git.ProjectStatus.UNDEFINED: "white",
+}
 
 
 @dataclass
@@ -107,6 +116,24 @@ def _append_config_command(subparsers, parent):
     )
 
 
+def _append_show_command(subparsers, parent):
+    show_parser = subparsers.add_parser(
+        "show",
+        help="list projects under the working directory",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        parents=[parent],
+        add_help=False,
+    )
+    show_parser.add_argument(
+        "-n",
+        "--no-check",
+        dest="nocheck",
+        help="don't check projects status",
+        action="store_true",
+    )
+    return show_parser
+
+
 def _parse_args(user_config: config_module.UserConfig):
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(
@@ -143,6 +170,7 @@ def _parse_args(user_config: config_module.UserConfig):
     start_parser = _append_start_command(subparsers, parent_parser, user_config)
     done_parser = _append_done_command(subparsers, parent_parser)
     _append_config_command(subparsers, parent_parser)
+    show_parser = _append_show_command(subparsers, parent_parser)
 
     _append_args(
         start_parser,
@@ -153,6 +181,12 @@ def _parse_args(user_config: config_module.UserConfig):
     )
     _append_args(
         done_parser,
+        [
+            directory_arg,
+        ],
+    )
+    _append_args(
+        show_parser,
         [
             directory_arg,
         ],
@@ -180,7 +214,7 @@ def main():
     except config_module.ConfigError as exc:
         logging.error("Configuration error: %s", exc)
         sys.exit(1)
-    except workon.CommandError as exc:
+    except git.CommandError as exc:
         logging.error("Command error: %s", exc)
         sys.exit(1)
     except Exception as exc:  # pylint:disable=broad-except
@@ -188,12 +222,12 @@ def main():
         sys.exit(2)
 
 
-def start(
+def handle_start_command(
     args: argparse.Namespace,
     user_config: config_module.UserConfig,
 ) -> None:
     """Process start command."""
-    workon_dir = workon.WorkOnDir(args.directory)
+    workon_dir = git.WorkingDir(args.directory)
 
     if user_config.sources:
         if args.source:
@@ -209,12 +243,12 @@ def start(
 
 
 # pylint:disable=unused-argument
-def done(
+def handle_done_command(
     args: argparse.Namespace,
     user_config: config_module.UserConfig,
 ) -> None:
     """Process done command."""
-    workon_dir = workon.WorkOnDir(args.directory)
+    workon_dir = git.WorkingDir(args.directory)
 
     if args.project:
         args.project = args.project.strip("/ ")
@@ -222,7 +256,7 @@ def done(
     workon_dir.remove(args.project, args.force)
 
 
-def config(
+def handle_config_command(
     args: argparse.Namespace,
     user_config: config_module.UserConfig,
 ) -> None:
@@ -230,13 +264,35 @@ def config(
     config_module.init_config()
     logging.info(config_module.load_config())
 
+
+def _build_projects_info_text(projects_info: Iterator[git.ProjectInfo]) -> str:
+    return "\n".join(
+        termcolor.colored(
+            f"{info.name}",
+            _COLOR_FOR_STATUS[info.status or git.ProjectStatus.UNDEFINED],
+        )
+        for info in projects_info
+    )
+
+
+def handle_show_command(
+    args: argparse.Namespace,
+    user_config: config_module.UserConfig,
+) -> None:
+    """Process show command."""
+    workon_dir = git.WorkingDir(args.directory)
+    projects_info = workon_dir.show(check_status=not args.nocheck)
+    logging.info(_build_projects_info_text(projects_info))
+
+
 # pylint:enable=unused-argument
 
 
 FUNC_FOR_COMMAND = {
-    "start": start,
-    "done": done,
-    "config": config,
+    "start": handle_start_command,
+    "done": handle_done_command,
+    "config": handle_config_command,
+    "show": handle_show_command,
 }
 
 if __name__ == "__main__":

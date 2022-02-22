@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 
+## [2.1.0] - 2022-02-22
+### Added
+* `show` command
+
+
 ## [2.0.0] - 2022-02-13
 ### Changed
 * `config` command now does not open the configuration. Instead, it only inits and shows it

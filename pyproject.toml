@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "git_workon"
-version = "2.0.0"
+version = "2.1.0"
 description = "Utility that automates projects clone/remove and checks for nonpushed changes on removal"
 authors = ["Andrey Nechaev <andrewnech@gmail.com>"]
 license = "MIT"
@@ -22,6 +22,7 @@ gw = 'git_workon.cli:main'
 [tool.poetry.dependencies]
 python = ">=3.7, <3.11"
 appdirs = "^1.4.4"
+termcolor = "^1.1.0"
 
 [tool.poetry.dev-dependencies]
 black = "^22.1.0"

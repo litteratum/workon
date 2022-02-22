@@ -1,5 +1,5 @@
 """Tests or cli.py."""
-# pylint:disable=missing-function-docstring, no-self-use
+# pylint:disable=missing-function-docstring, no-self-use, too-many-instance-attributes
 import os
 import sys
 import tempfile
@@ -7,7 +7,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from git_workon import cli, config, workon
+from git_workon import cli, config, git
 
 
 class TestBase(TestCase):
@@ -17,25 +17,30 @@ class TestBase(TestCase):
         self.mc_clone = MagicMock()
         self.mc_open = MagicMock()
         self.mc_remove = MagicMock()
+        self.mc_show = MagicMock()
 
-        self.patch_clone = patch(
-            "git_workon.workon.WorkOnDir.clone",
-            new=self.mc_clone,
-        )
-        self.patch_open = patch(
-            "git_workon.workon.WorkOnDir.open",
-            new=self.mc_open,
-        )
+        self.patch_clone = patch("git_workon.git.WorkingDir.clone", new=self.mc_clone)
+        self.patch_open = patch("git_workon.git.WorkingDir.open", new=self.mc_open)
         self.patch_remove = patch(
-            "git_workon.workon.WorkOnDir.remove",
-            new=self.mc_remove,
+            "git_workon.git.WorkingDir.remove", new=self.mc_remove
         )
-        for patch_ in self.patch_clone, self.patch_open, self.patch_remove:
+        self.patch_show = patch("git_workon.git.WorkingDir.show", new=self.mc_show)
+        for patch_ in (
+            self.patch_clone,
+            self.patch_open,
+            self.patch_remove,
+            self.patch_show,
+        ):
             patch_.start()
         return super().setUp()
 
     def tearDown(self) -> None:
-        for patch_ in self.patch_clone, self.patch_open, self.patch_remove:
+        for patch_ in (
+            self.patch_clone,
+            self.patch_open,
+            self.patch_remove,
+            self.patch_show,
+        ):
             patch_.stop()
         return super().tearDown()
 
@@ -161,7 +166,7 @@ class TestStartCommand(TestBase):
         Mock(return_value=config.UserConfig(None, None, None)),
     )
     def test_command_error(self):
-        self.mc_clone.side_effect = workon.CommandError("Oops")
+        self.mc_clone.side_effect = git.CommandError("Oops")
         with tempfile.TemporaryDirectory() as tmp_dir:
             sys.argv = ["git_workon", "start", "my_project", "-d", tmp_dir, "-s", "any"]
             with pytest.raises(SystemExit) as exc:
@@ -282,7 +287,7 @@ class TestDoneCommand(TestBase):
         Mock(return_value=config.UserConfig(None, None, None)),
     )
     def test_command_error(self):
-        self.mc_remove.side_effect = workon.CommandError("Oops")
+        self.mc_remove.side_effect = git.CommandError("Oops")
         with tempfile.TemporaryDirectory() as tmp_dir:
             sys.argv = [
                 "git_workon",
@@ -306,3 +311,42 @@ class TestConfigCommand(TestBase):
 
         mc_init_config.assert_called_once_with()
         assert mc_load_config.call_count == 2
+
+
+class TestShowCommand(TestBase):
+    """Tests for the show command."""
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_dir_is_not_specified_exit(self):
+        sys.argv = ["git_workon", "show"]
+
+        with pytest.raises(SystemExit) as exc:
+            cli.main()
+        assert int(str(exc.value)) == 2
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_show_no_check(self):
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = ["git_workon", "show", "-d", tmp_dir, "-n"]
+            cli.main()
+
+            self.mc_show.assert_called_once_with(check_status=False)
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_show_with_check(self):
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = ["git_workon", "show", "-d", tmp_dir]
+            cli.main()
+
+            self.mc_show.assert_called_once_with(check_status=True)
