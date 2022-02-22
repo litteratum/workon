@@ -17,25 +17,30 @@ class TestBase(TestCase):
         self.mc_clone = MagicMock()
         self.mc_open = MagicMock()
         self.mc_remove = MagicMock()
+        self.mc_show = MagicMock()
 
-        self.patch_clone = patch(
-            "git_workon.git.WorkingDir.clone",
-            new=self.mc_clone,
-        )
-        self.patch_open = patch(
-            "git_workon.git.WorkingDir.open",
-            new=self.mc_open,
-        )
+        self.patch_clone = patch("git_workon.git.WorkingDir.clone", new=self.mc_clone)
+        self.patch_open = patch("git_workon.git.WorkingDir.open", new=self.mc_open)
         self.patch_remove = patch(
-            "git_workon.git.WorkingDir.remove",
-            new=self.mc_remove,
+            "git_workon.git.WorkingDir.remove", new=self.mc_remove
         )
-        for patch_ in self.patch_clone, self.patch_open, self.patch_remove:
+        self.patch_show = patch("git_workon.git.WorkingDir.show", new=self.mc_show)
+        for patch_ in (
+            self.patch_clone,
+            self.patch_open,
+            self.patch_remove,
+            self.patch_show,
+        ):
             patch_.start()
         return super().setUp()
 
     def tearDown(self) -> None:
-        for patch_ in self.patch_clone, self.patch_open, self.patch_remove:
+        for patch_ in (
+            self.patch_clone,
+            self.patch_open,
+            self.patch_remove,
+            self.patch_show,
+        ):
             patch_.stop()
         return super().tearDown()
 
@@ -306,3 +311,30 @@ class TestConfigCommand(TestBase):
 
         mc_init_config.assert_called_once_with()
         assert mc_load_config.call_count == 2
+
+
+class TestListCommand(TestBase):
+    """Tests for the list command."""
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_dir_is_not_specified_exit(self):
+        sys.argv = ["git_workon", "list"]
+
+        with pytest.raises(SystemExit) as exc:
+            cli.main()
+        assert int(str(exc.value)) == 2
+
+    @patch(
+        "git_workon.config.load_config",
+        Mock(return_value=config.UserConfig(None, None, None)),
+    )
+    def test_list_ok(self):
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            sys.argv = ["git_workon", "show", "-d", tmp_dir]
+            cli.main()
+
+            self.mc_show.assert_called_once_with()

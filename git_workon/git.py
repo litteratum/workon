@@ -4,7 +4,7 @@ import logging
 import os
 import shutil
 import subprocess
-from typing import List
+from typing import Iterator, List
 
 
 class GITError(Exception):
@@ -179,6 +179,10 @@ class WorkingDir:
                     break
         else:
             raise CommandError(f'No suitable editor found to open "{project_dir}"')
+
+    def show(self) -> Iterator[str]:
+        """Return dirs list."""
+        yield from self._dirs
 
     def _remove_projects(self, force: bool = False) -> None:
         for project in self._dirs:

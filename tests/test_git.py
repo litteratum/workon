@@ -377,3 +377,14 @@ class TestOpen(TestWorkingDirBase):
 
         self.workon.open(proj.name, editor="code")
         assert mc_subprocess.run.call_count == 2
+
+
+class TestShow(TestWorkingDirBase):
+    """Tests for the show command."""
+
+    def test_dir_is_empty_returns_empty_list(self):
+        assert not list(self.workon.show())
+
+    def test_one_project_returns_this_project_name(self):
+        proj = self.add_git_project()
+        assert list(self.workon.show()) == [proj.name]

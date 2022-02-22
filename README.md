@@ -20,7 +20,7 @@ pip install git-workon
 
 ## Usage
 
-## Configuration
+### Configuration
 
 The script commands can be fully controlled by CLI arguments, but it is much convenient to have a configuration file
 defining most of parameters. There is a special `config` command that will help you to prepare suitable configuration.
@@ -108,6 +108,16 @@ If a project name was not passed, the command will try to remove everything from
 folders containing ".git" will be checked for unpushed entities).
 
 See `gw done --help` for other available options on how to control the command.
+
+### Show all tracked projects
+
+To list all projects under the working directory, use `show` command:
+
+```bash
+gw show [options]
+```
+
+See `gw show --help` for other available options on how to control the command.
 
 ## Bash completions
 
