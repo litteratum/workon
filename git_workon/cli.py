@@ -200,7 +200,10 @@ def _parse_args(user_config: config_module.UserConfig):
         ],
     )
 
-    return parser.parse_args()
+    args = parser.parse_args()
+    if hasattr(args, "project") and args.project:
+        args.project = args.project.strip("/ ")
+    return args
 
 
 def _init_logger(verbose):

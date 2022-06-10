@@ -128,7 +128,7 @@ class TestStartCommand(TestBase):
             sys.argv = [
                 "git_workon",
                 "start",
-                os.path.basename(project_name),
+                os.path.basename(project_name) + "/",
                 "-d",
                 tmp_dir,
                 "-s",
@@ -168,7 +168,15 @@ class TestStartCommand(TestBase):
     def test_command_error(self):
         self.mc_clone.side_effect = git.CommandError("Oops")
         with tempfile.TemporaryDirectory() as tmp_dir:
-            sys.argv = ["git_workon", "start", "my_project", "-d", tmp_dir, "-s", "any"]
+            sys.argv = [
+                "git_workon",
+                "start",
+                "my_project",
+                "-d",
+                tmp_dir,
+                "-s",
+                "any",
+            ]
             with pytest.raises(SystemExit) as exc:
                 cli.main()
             assert int(str(exc.value)) == 1
