@@ -104,8 +104,7 @@ This command will:
 * If everything was pushed:
   * remove a project from the working directory
 
-If a project name was not passed, the command will try to remove everything from the working directory (still,
-folders containing ".git" will be checked for unpushed entities).
+If a project name was not passed, the command will try to remove all git repos from the working directory.
 
 See `gw done --help` for other available options on how to control the command.
 

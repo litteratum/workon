@@ -39,18 +39,26 @@ def _run_command(
     """Run command in subprocess."""
     logging.debug('Running command "%s"', command)
     return subprocess.run(
-        command.split(), cwd=cwd, capture_output=True, text=True, check=check
+        command.split(),
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=check,
     )
 
 
 def is_git_dir(directory: str) -> bool:
     """Return whether a directory is GIT initialized directory."""
-    return os.path.isdir(directory) and ".git" in os.listdir(directory)
+    return os.path.isdir(directory) and ".git" in os.listdir(
+        directory
+    )
 
 
 def _get_stash_info(directory: str):
     """Return stash info under `directory`."""
-    logging.debug('Checking for unpushed GIT stashes under "%s"', directory)
+    logging.debug(
+        'Checking for unpushed GIT stashes under "%s"', directory
+    )
     return _run_command("git stash list", cwd=directory).stdout
 
 
@@ -59,15 +67,20 @@ def _get_unpushed_branches_info(directory: str) -> str:
 
     Format is: <commit> (<branch>) <commit_message>
     """
-    logging.debug('Checking for unpushed GIT commits under "%s"', directory)
+    logging.debug(
+        'Checking for unpushed GIT commits under "%s"', directory
+    )
     return _run_command(
-        "git log --branches --not --remotes --decorate --oneline", cwd=directory
+        "git log --branches --not --remotes --decorate --oneline",
+        cwd=directory,
     ).stdout
 
 
 def _get_unstaged_info(directory: str) -> str:
     """Return information about unstaged changes."""
-    logging.debug('Checking for unstaged changes under "%s"', directory)
+    logging.debug(
+        'Checking for unstaged changes under "%s"', directory
+    )
     return _run_command("git status --short", cwd=directory).stdout
 
 
@@ -129,7 +142,9 @@ def clone(source: str, destination: str):
         logging.info('Cloning "%s" to "%s"', source, destination)
         _run_command(f"git clone {source} {destination}", check=True)
     except subprocess.CalledProcessError as exc:
-        raise GITError(f'Failed to clone "{source}":\n{exc.stderr}') from exc
+        raise GITError(
+            f'Failed to clone "{source}":\n{exc.stderr}'
+        ) from exc
 
 
 class WorkingDir:
@@ -146,14 +161,18 @@ class WorkingDir:
     def _dirs(self) -> List[str]:
         return os.listdir(self.directory)
 
-    def remove(self, project_name: str = None, force: bool = False) -> None:
+    def remove(
+        self, project_name: str = None, force: bool = False
+    ) -> None:
         """Remove project from the directory.
 
         If `project_name` is not specified, all projects will be removed.
         """
         if project_name:
             if project_name not in self._dirs:
-                raise CommandError(f'"{project_name}" not found in "{self.directory}"')
+                raise CommandError(
+                    f'"{project_name}" not found in "{self.directory}"'
+                )
             self._remove_project(project_name, force)
         else:
             self._remove_projects(force)
@@ -161,12 +180,16 @@ class WorkingDir:
     def clone(self, project_name: str, sources: List[str]) -> None:
         """Clone a project to the working directory."""
         if project_name in self._dirs:
-            raise CommandError(f'Project "{project_name}" is already cloned')
+            raise CommandError(
+                f'Project "{project_name}" is already cloned'
+            )
 
         for i, source in enumerate(sources, start=1):
             try:
                 clone(
-                    os.path.join(source.strip("/"), f"{project_name}.git"),
+                    os.path.join(
+                        source.strip("/"), f"{project_name}.git"
+                    ),
                     f"{self.directory}/{project_name}",
                 )
                 break
@@ -189,20 +212,36 @@ class WorkingDir:
                 f'No project named "{project_name}" found under the working directory'
             )
 
-        for editor_ in (editor, os.environ.get("EDITOR"), "vi", "vim"):
+        for editor_ in (
+            editor,
+            os.environ.get("EDITOR"),
+            "vi",
+            "vim",
+        ):
             if editor_:
-                logging.info('Opening "%s" with "%s" editor', project_dir, editor_)
-                result = subprocess.run([editor_, project_dir], check=False)
+                logging.info(
+                    'Opening "%s" with "%s" editor',
+                    project_dir,
+                    editor_,
+                )
+                result = subprocess.run(
+                    [editor_, project_dir], check=False
+                )
                 if result.returncode == 0:
                     break
         else:
-            raise CommandError(f'No suitable editor found to open "{project_dir}"')
+            raise CommandError(
+                f'No suitable editor found to open "{project_dir}"'
+            )
 
     def show(self, check_status: bool) -> Iterator[ProjectInfo]:
         """Return information about GIT projects."""
         for project in self._dirs:
             yield ProjectInfo(
-                project, self._get_project_status(project) if check_status else None
+                project,
+                self._get_project_status(project)
+                if check_status
+                else None,
             )
 
     def _get_project_status(self, project_name: str) -> ProjectStatus:
@@ -224,22 +263,17 @@ class WorkingDir:
                 except CommandError as exc:
                     logging.error(exc)
                     continue
-        # there may be some files left
-        for filepath in glob.glob(os.path.join(self.directory, "*")):
-            if os.path.islink(filepath):
-                logging.debug('Removing symlink "%s"', filepath)
-                os.unlink(filepath)
-            elif not os.path.isdir(filepath):
-                logging.debug('Removing file "%s"', filepath)
-                os.remove(filepath)
 
-    def _remove_project(self, project_name: str, force: bool = False) -> None:
+    def _remove_project(
+        self, project_name: str, force: bool = False
+    ) -> None:
         logging.info('Finishing up "%s"', project_name)
         proj_path = os.path.join(self.directory, project_name)
 
         if not is_git_dir(proj_path):
-            logging.debug('Not a GIT repository, removing "%s"', proj_path)
-            shutil.rmtree(proj_path)
+            logging.debug(
+                "Not a GIT repository (%s), skipping", proj_path
+            )
             return
 
         try:

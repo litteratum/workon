@@ -40,13 +40,17 @@ class ArgParseArgument:
     keyword: dict
 
 
-def _append_args(parser, args: Optional[List[ArgParseArgument]]) -> None:
+def _append_args(
+    parser, args: Optional[List[ArgParseArgument]]
+) -> None:
     if args:
         for arg in args:
             parser.add_argument(*arg.positional, **arg.keyword)
 
 
-def _append_start_command(subparsers, parent, user_config: config_module.UserConfig):
+def _append_start_command(
+    subparsers, parent, user_config: config_module.UserConfig
+):
     start_parser = subparsers.add_parser(
         "start",
         help="start your work on a project",
@@ -56,7 +60,9 @@ def _append_start_command(subparsers, parent, user_config: config_module.UserCon
     )
     start_parser.register("action", "extend", ExtendAction)
 
-    start_parser.add_argument("project", help="project name to start with")
+    start_parser.add_argument(
+        "project", help="project name to start with"
+    )
     start_parser.add_argument(
         "-s",
         "--source",
@@ -167,7 +173,9 @@ def _parse_args(user_config: config_module.UserConfig):
         },
     )
 
-    start_parser = _append_start_command(subparsers, parent_parser, user_config)
+    start_parser = _append_start_command(
+        subparsers, parent_parser, user_config
+    )
     done_parser = _append_done_command(subparsers, parent_parser)
     _append_config_command(subparsers, parent_parser)
     show_parser = _append_show_command(subparsers, parent_parser)
@@ -265,11 +273,15 @@ def handle_config_command(
     logging.info(config_module.load_config())
 
 
-def _build_projects_info_text(projects_info: Iterator[git.ProjectInfo]) -> str:
+def _build_projects_info_text(
+    projects_info: Iterator[git.ProjectInfo],
+) -> str:
     return "\n".join(
         termcolor.colored(
             f"{info.name}",
-            _COLOR_FOR_STATUS[info.status or git.ProjectStatus.UNDEFINED],
+            _COLOR_FOR_STATUS[
+                info.status or git.ProjectStatus.UNDEFINED
+            ],
         )
         for info in projects_info
     )

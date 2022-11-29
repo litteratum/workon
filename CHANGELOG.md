@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [3.0.0] - 2022-11-29
+### Changed
+
+* `done` command now does not remove non-git files because in some cases it may be dangerous
+
 
 ## [2.1.0] - 2022-02-22
 ### Added

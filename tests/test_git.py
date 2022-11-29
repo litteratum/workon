@@ -231,23 +231,23 @@ class TestRemove(TestWorkingDirBase):
         assert not os.path.exists(proj.path)
 
     @patch("git_workon.git.check_all_pushed", Mock(return_value=None))
-    def test_all_filetypes_removed(self):
+    def test_non_git_repos_not_removed(self):
         # GIT projects
         for _ in range(2):
             self.add_git_project()
         # project dir
         tempfile.mkdtemp(dir=self.workon.directory)
         # regular file
-        tempfile.mktemp(dir=self.workon.directory)
+        tempfile.NamedTemporaryFile(dir=self.workon.directory, delete=False)
         # symlink
-        src = tempfile.mktemp(dir=self.workon.directory)
-        dst = tempfile.mktemp(dir=self.workon.directory)
+        src = tempfile.NamedTemporaryFile(dir=self.workon.directory, delete=False).name
+        dst = tempfile.NamedTemporaryFile(dir=self.workon.directory).name
         os.symlink(src, dst)
         # namedpipe
         os.mkfifo(os.path.join(self.workon.directory, "tmppipe"), 0o600)
 
         self.workon.remove()
-        assert not os.listdir(self.workon.directory)
+        assert len(os.listdir(self.workon.directory)) == 5
 
     @patch(
         "git_workon.git.check_all_pushed",
