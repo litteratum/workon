@@ -44,8 +44,8 @@ coverage: $(VENV)
 
 .PHONY: lint
 lint: $(VENV)
-	pylint $(PACKAGE) tests
-	pydocstyle --ignore=D102,D103,D105,D107,D203,D213 $(PACKAGE)/** tests/**
+	$(VENV)/bin/pylint $(PACKAGE) tests
+	$(VENV)/bin/pydocstyle --ignore=D102,D103,D105,D107,D203,D213 $(PACKAGE)/** tests/**
 
 .PHONY: build
 build:
