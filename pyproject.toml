@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "git_workon"
-version = "3.0.0"
+version = "3.1.0"
 description = "Utility that automates projects clone/remove and checks for nonpushed changes on removal"
 authors = ["Andrey Nechaev <andrewnech@gmail.com>"]
 license = "MIT"
