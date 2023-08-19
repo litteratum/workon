@@ -20,7 +20,7 @@ classifiers=[
 gw = 'git_workon.cli:main'
 
 [tool.poetry.dependencies]
-python = ">=3.7, <3.11"
+python = "^3.7"
 appdirs = "^1.4.4"
 termcolor = "^1.1.0"
 
@@ -30,7 +30,6 @@ pylint = "^2.12.2"
 pydocstyle = "^6.1.1"
 pytest = "^7.0.1"
 pytest-cov = "^3.0.0"
-tox = "^3.24.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

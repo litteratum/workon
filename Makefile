@@ -1,4 +1,6 @@
 PACKAGE=git_workon
+VENV=.venv
+NOX_ENV=.nox_env
 
 .PHONY: help
 help:
@@ -10,31 +12,38 @@ help:
 	@echo "build       -> build packages"
 	@echo "publish     -> publish packages to the PyPi"
 
-.PHONY: venv
-venv:
+
+$(VENV):
 	poetry install
 
+.PHONY: venv
+venv: $(VENV)
+
 .PHONY: test
-test:
+test: $(VENV)
 	poetry run pytest -svvv tests
 
+
+$(NOX_ENV):
+	python3 -m venv $(NOX_ENV)
+	$(NOX_ENV)/bin/pip install nox
+
 .PHONY: testall
-testall:
-	pyenv local 3.8.12 3.9.10 3.10.2
-	tox -p
+testall: $(NOX_ENV)
+	$(NOX_ENV)/bin/nox
 
 .PHONY: clean
 clean:
-	rm -rf .venv build _build dist *.egg-info .coverage htmlcov .tox .python-version
+	rm -rf .venv build _build dist *.egg-info .coverage htmlcov .nox $(NOX_ENV) .python-version
 	find . -type f -name '*.py[co]' -delete -o -type d -name __pycache__ -delete
 	py3clean . -v
 
 .PHONY: coverage
-coverage:
+coverage: $(VENV)
 	poetry run pytest --cov-report html --cov=$(PACKAGE) tests/
 
 .PHONY: lint
-lint:
+lint: $(VENV)
 	pylint $(PACKAGE) tests
 	pydocstyle --ignore=D102,D103,D105,D107,D203,D213 $(PACKAGE)/** tests/**
 

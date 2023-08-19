@@ -4,7 +4,8 @@
 /build
 /_build
 dist
-.tox
+.nox
+.nox_env
 .python-version
 
 # tests coverage
