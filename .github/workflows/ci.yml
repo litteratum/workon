@@ -30,6 +30,10 @@ jobs:
         with:
           virtualenvs-create: false
           virtualenvs-in-project: true
+      - name: Setup git config
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "<>"
       - name: Install dependencies
         run: |
           make venv
