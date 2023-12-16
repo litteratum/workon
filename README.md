@@ -1,4 +1,5 @@
 [![tests](https://github.com/ReturnedVoid/workon/actions/workflows/ci.yml/badge.svg)](https://github.com/ReturnedVoid/workon)
+[![PyPI](https://img.shields.io/pypi/v/git-workon.svg)](https://pypi.org/project/git-workon)
 
 # GIT workon
 
